@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<link rel="stylesheet" href="_ds/broadsheet-5008def6-722e-455d-a979-2e6d679527f5/styles.css">
+<style>
+  a{color:var(--color-accent)}
+  a:hover{color:var(--color-accent-700)}
+  .link-card{position:relative;transition:box-shadow .15s ease}
+  .link-card:hover{box-shadow:var(--shadow-md)}
+  .link-card a.cover{position:absolute;inset:0}
+  .link-card a.cover:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;border-radius:var(--radius-md)}
+</style>
+</helmet>
+
+<div style="background:var(--color-bg);min-height:100vh;font-family:var(--font-body);color:var(--color-text)">
+
+  <nav class="nav" style="padding:var(--space-3) var(--space-6)">
+    <img src="assets/escudo.png" alt="Escudo IE Nuevo Compartir" style="width:46px;height:46px;object-fit:contain">
+    <div class="nav-brand" style="display:flex;flex-direction:column;gap:2px">
+      <span>IE Nuevo Compartir</span>
+      <span style="font-size:12px;font-weight:400;opacity:.6">Sede San Nicolás</span>
+    </div>
+    <span class="tag tag-outline">Panel docente · Jornada mañana</span>
+  </nav>
+
+  <header style="padding:var(--space-6) var(--space-6) var(--space-4)">
+    <div style="border-top:4px solid var(--color-text);border-bottom:1px solid var(--color-text);padding:6px 0;display:flex;justify-content:space-between;font-size:11px;letter-spacing:.08em;text-transform:uppercase">
+      <span>Edición docentes</span>
+      <span>{{ fecha }}</span>
+    </div>
+    <h1 style="margin-top:var(--space-4);max-width:720px">Enlaces y novedades para el equipo docente</h1>
+    <p class="text-muted" style="max-width:560px;font-size:16px">Plataformas, documentos institucionales y las novedades de la semana, en un solo lugar.</p>
+  </header>
+
+  <section style="padding:var(--space-4) var(--space-6) var(--space-8)">
+    <h2 style="margin-bottom:var(--space-4)">Enlaces institucionales</h2>
+    <div style="display:flex;flex-direction:column;gap:var(--space-6)">
+      <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="6">
+        <div>
+          <h6 style="color:var(--color-accent);margin-bottom:4px">{{ cat.kicker }}</h6>
+          <h3 style="margin-bottom:var(--space-3)">{{ cat.title }}</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:var(--space-3)">
+            <sc-for list="{{ cat.links }}" as="link" hint-placeholder-count="3">
+              <div class="card elev-sm link-card">
+                <span class="card-title">{{ link.title }}</span>
+                <p class="card-body">{{ link.desc }}</p>
+                <div style="box-sizing: border-box; position: absolute; left: 0px; top: 0px; width: 252px; height: 121px"><a class="cover" href="{{ link.href }}" target="_blank" rel="noopener" aria-label="{{ link.title }}" style="left: 0px; top: 0px"></a></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:0 var(--space-6) var(--space-8)">
+    <h2 style="margin-bottom:var(--space-1)">Novedades y tareas</h2>
+    <p class="text-muted" style="margin-bottom:var(--space-4);font-size:13px">Avisos, tareas pendientes, cambios de horario, reuniones y fechas límite.</p>
+    <table class="table">
+      <thead>
+        <tr><th>Tipo</th><th>Novedad</th><th>Fecha</th><th>Detalle</th></tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{ novedades }}" as="n" hint-placeholder-count="6">
+          <tr>
+            <td><span class="tag {{ n.tagClass }}">{{ n.tipo }}</span></td>
+            <td style="font-family:var(--font-heading);font-weight:600">{{ n.titulo }}</td>
+            <td class="text-muted">{{ n.fecha }}</td>
+            <td>{{ n.detalle }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </section>
+
+  <section style="padding:0 var(--space-6) var(--space-8)">
+    <h2 style="margin-bottom:var(--space-1)">Seguimiento de entregas</h2>
+    <p class="text-muted" style="margin-bottom:var(--space-4);font-size:13px">Estado de entregas por docente.</p>
+    <div style="display:flex;flex-direction:column;gap:var(--space-6)">
+      <sc-for list="{{ seguimientoPorDocente }}" as="grupo" hint-placeholder-count="3">
+        <div>
+          <h5 style="margin-bottom:var(--space-2)">{{ grupo.docente }}</h5>
+          <table class="table">
+            <thead>
+              <tr><th>Entrega</th><th>Fecha límite</th><th>Estado</th><th>Observaciones</th></tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ grupo.items }}" as="item" hint-placeholder-count="2">
+                <tr>
+                  <td>{{ item.entrega }}</td>
+                  <td class="text-muted">{{ item.fecha }}</td>
+                  <td><span class="tag {{ item.tagClass }}">{{ item.estado }}</span></td>
+                  <td class="text-muted">{{ item.observaciones }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <footer style="padding:var(--space-4) var(--space-6) var(--space-6);border-top:1px solid var(--color-divider)">
+    <p class="text-muted" style="font-size:12px;margin:0">IE Nuevo Compartir · Sede San Nicolás — Uso interno, exclusivo para docentes.</p>
+  </footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const NOVEDADES_TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1hPVzn5SLVBWRx4VNtEtilrWq-MShpcJvkQ__-mRqCbDhqQFFmBJsJjv-maNbtv3OnylCQ-ZAqH6d/pub?gid=0&single=true&output=tsv';
+const SEGUIMIENTO_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRynxtJGiFjWP-JqPLoYGnptos5UKWVRzgQVL6idmbb9nSSjJUW5z5WvcJwcIN6B3oD1rN7lxVBqxI0/pub?output=csv';
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+      } else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); field = ''; rows.push(row); row = [];
+    } else field += c;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(f => f.trim() !== ''));
+}
+
+class Component extends DCLogic {
+  state = { novedades: null, seguimiento: null };
+
+  componentDidMount() {
+    this.loadNovedades();
+    this.loadSeguimiento();
+  }
+
+  async loadSeguimiento() {
+    if (!SEGUIMIENTO_CSV_URL) return;
+    try {
+      const res = await fetch(SEGUIMIENTO_CSV_URL, { cache: 'no-store' });
+      const text = await res.text();
+      const rows = parseCSV(text).slice(1).map(([docente, entrega, fecha, estado, observaciones]) => ({
+        docente: (docente || '').trim(), entrega: (entrega || '').trim(),
+        fecha: (fecha || '').trim(), estado: (estado || '').trim(), observaciones: (observaciones || '').trim(),
+      })).filter(r => r.docente);
+      if (rows.length) this.setState({ seguimiento: rows });
+    } catch (e) {
+      console.warn('No se pudo cargar el seguimiento de entregas', e);
+    }
+  }
+
+  estadoTagClass(estado) {
+    const map = {
+      'No entregado': 'tag-accent-2',
+      'Incompleto': 'tag-outline',
+      'Entregado': 'tag-accent',
+      'No aplica': 'tag-neutral',
+    };
+    return map[estado] || 'tag-neutral';
+  }
+
+  async loadNovedades() {
+    try {
+      const res = await fetch(NOVEDADES_TSV_URL, { cache: 'no-store' });
+      const text = await res.text();
+      const rows = text.trim().split('\n').slice(1).map(line => {
+        const [tipo, titulo, fecha, detalle] = line.split('\t');
+        return { tipo: (tipo || '').trim(), titulo: (titulo || '').trim(), fecha: (fecha || '').trim(), detalle: (detalle || '').trim() };
+      }).filter(r => r.titulo);
+      if (rows.length) this.setState({ novedades: rows });
+    } catch (e) {
+      console.warn('No se pudo cargar novedades desde la hoja de cálculo', e);
+    }
+  }
+
+  tagClassFor(tipo) {
+    const map = {
+      'Aviso': 'tag-neutral',
+      'Tarea': 'tag-accent',
+      'Horario': 'tag-accent-2',
+      'Reunión': 'tag-outline',
+      'Fecha límite': 'tag-accent-2',
+    };
+    return map[tipo] || 'tag-neutral';
+  }
+
+  renderVals() {
+    const categories = [
+      { kicker: 'Gestión académica', title: 'Plataformas académicas', links: [
+        { title: 'IENC — Sistema de Convivencia 2026', desc: 'Registro y consulta de casos convivenciales.', href: 'https://script.google.com/macros/s/AKfycbxZF67ghfksuvfPoutGfDjoQAx-UaZ-JIJI9ZNgP41mVIvD_b_RZG-qzpWDjycVZIo41A/exec' },
+        { title: 'Horarios IENC — San Nicolás', desc: 'Consulta de horarios y novedades.', href: 'https://johannivancb-byte.github.io/sn26/' },
+        { title: 'Plataforma de notas', desc: 'Registro y consulta de calificaciones.', href: 'https://www.gssoftwareysoluciones.com/2022/?view=index' },
+      ]},
+      { kicker: 'Normatividad', title: 'Documentos institucionales', links: [
+        { title: 'PEI', desc: 'Proyecto Educativo Institucional.', href: 'https://drive.google.com/file/d/1fWNpk-bLZ3p_ydmDXdv_Es3pJQDEsUwI/view?usp=sharing' },
+        { title: 'Manual de convivencia', desc: 'Ruta de atención y normas de convivencia.', href: 'https://drive.google.com/file/d/1XSOsdvIof5RQ0Ean7S5S0Wah7-69ER75/view?usp=sharing' },
+        { title: 'SIEE', desc: 'Sistema Institucional de Evaluación de Estudiantes.', href: 'https://drive.google.com/file/d/19ikcFCSi8psCenydaxM4Fw8UBWBNfcQc/view?usp=sharing' },
+      ]},
+      { kicker: 'Trámites', title: 'Formatos y formularios', links: [
+        { title: 'Acta de convivencia', desc: 'Formato para registrar casos.', href: 'https://docs.google.com/document/d/1u2cV3cK2oYriwToGar7715FbQM-Ybj87/edit?usp=drive_link&ouid=116793213589150702087&rtpof=true&sd=true' },
+        { title: 'Formato de permisos y ausencias', desc: 'Formulario de permisos docentes.', href: 'https://docs.google.com/document/d/1YdwLEd4xOdf3FusAnPsY-nqR9KL6Qo4a/edit?usp=drive_link&ouid=116793213589150702087&rtpof=true&sd=true' },
+        { title: 'Otros formatos', desc: 'Carpeta con formatos adicionales.', href: 'https://drive.google.com/drive/folders/1UUOgPYZ4EfUSOFQH93KE_Zdcii3AqR5A?usp=drive_link' },
+      ]},
+      { kicker: 'Aula', title: 'Recursos pedagógicos', links: [
+        { title: 'REPORTE CORTE SEGUNDO TRIMESTRE', desc: 'Reporte de corte del segundo trimestre.', href: 'https://script.google.com/macros/s/AKfycbzOaDT7QdvYANLUO-KaZr67i0bfKJWsjVSDCZmhtLuQYbai9Lm4tV5o8KBsMQYHW7VY/exec' },
+        { title: 'Planeación', desc: 'Planeación por área y grado.', href: 'https://drive.google.com/drive/folders/1ARb6uWazgk-ab9CuNy7Qj_xSHfEfMwv0?usp=sharing' },
+        { title: 'Listas vigentes', desc: 'Listados actualizados de estudiantes.', href: 'https://drive.google.com/drive/folders/16wa1aTjgf76yYdy4I6C2gbO6se_fhTsV?usp=drive_link' },
+      ]},
+    ];
+
+    const fallback = [
+      { tipo: 'Aviso', titulo: 'Jornada pedagógica', fecha: '4 ago', detalle: 'Reunión general de docentes en sala de profesores.' },
+      { tipo: 'Tarea', titulo: 'Entrega de planeadores', fecha: '5 ago', detalle: 'Subir planeadores del tercer periodo a la plataforma.' },
+      { tipo: 'Horario', titulo: 'Ausencia docente grado 6°A', fecha: '1 ago', detalle: 'Reemplazo asignado en bloque de la mañana.' },
+      { tipo: 'Reunión', titulo: 'Comité de convivencia', fecha: '6 ago', detalle: 'Revisión de casos pendientes, sala de coordinación.' },
+      { tipo: 'Fecha límite', titulo: 'Cierre de notas', fecha: '8 ago', detalle: 'Plazo final para cargar calificaciones del periodo.' },
+      { tipo: 'Aviso', titulo: 'Circular Secretaría de Educación', fecha: '30 jul', detalle: 'Nuevo protocolo de reporte de inasistencias.' },
+    ];
+    const novedades = (this.state.novedades || fallback).map(n => ({ ...n, tagClass: this.tagClassFor(n.tipo) }));
+
+    const seguimientoFallback = [
+      { docente: 'Ana Martínez', entrega: 'Planeadores 3er periodo', fecha: '5 ago', estado: 'Entregado', observaciones: '' },
+      { docente: 'Ana Martínez', entrega: 'Formato SIEE', fecha: '8 ago', estado: 'Incompleto', observaciones: 'Falta firma.' },
+      { docente: 'Carlos Ruiz', entrega: 'Planeadores 3er periodo', fecha: '5 ago', estado: 'No entregado', observaciones: '' },
+      { docente: 'Diana Gómez', entrega: 'Formato SIEE', fecha: '8 ago', estado: 'No aplica', observaciones: 'No tiene grupo asignado.' },
+    ];
+    const seguimientoRows = (this.state.seguimiento || seguimientoFallback).map(s => ({ ...s, tagClass: this.estadoTagClass(s.estado) }));
+    const seguimientoPorDocente = Object.values(seguimientoRows.reduce((acc, row) => {
+      if (!acc[row.docente]) acc[row.docente] = { docente: row.docente, items: [] };
+      acc[row.docente].items.push(row);
+      return acc;
+    }, {}));
+
+    return {
+      fecha: 'Jueves, 30 de julio de 2026',
+      categories,
+      novedades,
+      seguimientoPorDocente,
+    };
+  }
+}
+</script>
+</body>
+</html>
