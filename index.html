@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta Salones - Sede San Nicolás</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --azul-rey: #0C6E9C; } /* Azul petróleo - Segundo Trimestre (antes #0047AB en Primer Trimestre) */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1f2937; font-size: 17px; }
+        .bg-azul-rey { background-color: var(--azul-rey); }
+        .text-azul-rey { color: var(--azul-rey); }
+        .border-azul-rey { border-color: var(--azul-rey); }
+        .hidden { display: none; }
+
+        /* === LETRA GRANDE Y LEGIBLE EN TODA LA PÁGINA (uso principal: celular) === */
+        .text-\[8px\], .text-\[9px\], .text-\[10px\], .text-\[11px\], .text-xs { font-size: 16px !important; line-height: 1.4 !important; }
+        .text-sm { font-size: 17px !important; line-height: 1.5 !important; }
+        .text-lg { font-size: 20px !important; }
+        .text-2xl { font-size: 26px !important; }
+        /* Contraste mínimo garantizado: nada de gris claro sobre blanco */
+        .text-gray-400, .text-gray-300 { color: #4b5563 !important; } /* gray-600 */
+        .text-gray-500 { color: #374151 !important; } /* gray-700 */
+    </style>
+</head>
+<body class="pb-10">
+
+    <header class="bg-white shadow-md p-6 flex flex-col items-center border-b-4 border-azul-rey">
+        <img src="logo.png" alt="Logo Colegio" class="h-24 mb-3">
+        <h1 class="text-2xl font-black text-azul-rey text-center uppercase tracking-wider">Sede San Nicolás</h1>
+        <div class="bg-azul-rey text-white px-4 py-1 rounded-full text-xs font-bold mt-2 text-center">CONSULTA DE SALONES - TRIMESTRALES 2026</div>
+        <div class="text-gray-600 font-semibold mt-2 text-center" style="font-size:14px">🕘 Última actualización: 19 de agosto de 2026 — 9:00am</div>
+    </header>
+
+    <main class="max-w-md mx-auto mt-6 px-4">
+        
+        <div id="perfil-selector" class="flex gap-2 mb-6">
+            <button onclick="setPerfil('estudiante')" id="btn-est" class="flex-1 py-4 rounded-xl font-bold border-2 border-azul-rey bg-azul-rey text-white shadow-lg text-xs">ESTUDIANTE</button>
+            <button onclick="setPerfil('docente')" id="btn-doc" class="flex-1 py-4 rounded-xl font-bold border-2 border-azul-rey text-azul-rey bg-white shadow-lg text-xs">SALONES</button>
+            <button onclick="setPerfil('horario')" id="btn-hor" class="flex-1 py-4 rounded-xl font-bold border-2 border-azul-rey text-azul-rey bg-white shadow-lg text-xs">HORARIO</button>
+        </div>
+
+        <!-- SECCION ESTUDIANTE -->
+        <div id="seccion-estudiante" class="space-y-4">
+
+            <!-- TUTORIAL BÁSICO -->
+            <div class="bg-white p-5 rounded-2xl shadow-lg border-2 border-azul-rey/20">
+                <h3 class="font-black text-azul-rey uppercase text-center mb-3" style="font-size:15px">¿Qué encuentras aquí?</h3>
+                <div class="space-y-3">
+                    <div class="flex gap-3 items-start">
+                        <span class="bg-azul-rey text-white rounded-full w-8 h-8 flex items-center justify-center font-black shrink-0">1</span>
+                        <div><b class="text-azul-rey">ESTUDIANTE</b> — busca tu nombre o el número de tu curso para saber en qué salón presentas la prueba.</div>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <span class="bg-azul-rey text-white rounded-full w-8 h-8 flex items-center justify-center font-black shrink-0">2</span>
+                        <div><b class="text-azul-rey">SALONES</b> — para docentes y logística: consulta quién está en cada salón, o el resumen de estudiantes por director de curso. Incluye las reglas del día.</div>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <span class="bg-azul-rey text-white rounded-full w-8 h-8 flex items-center justify-center font-black shrink-0">3</span>
+                        <div><b class="text-azul-rey">HORARIO</b> — para docentes: consulta tu asignación por tu nombre, por aula, o revisa el horario general completo del día de pruebas. Incluye las reglas del día.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-azul-rey text-center">
+                <label class="block text-gray-700 font-bold mb-3 uppercase tracking-tight">Busca por tu nombre o curso:</label>
+                <input type="text" id="input-busqueda" oninput="buscarEstudiante()" placeholder="Ej: Perez Juan o 605..." class="w-full p-4 border-2 rounded-xl focus:border-azul-rey outline-none text-lg text-center">
+                <p class="text-[10px] text-gray-400 mt-2 italic uppercase">Solo escribe una parte de tu nombre o el número de tu curso.</p>
+            </div>
+            <div id="resultado-busqueda" class="space-y-4"></div>
+        </div>
+
+        <!-- SECCION DOCENTE -->
+        <div id="seccion-docente" class="hidden space-y-4">
+            <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-azul-rey">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2 text-sm uppercase">Ver por Salón (Logística):</label>
+                        <select id="select-salon" onchange="filtrarPorSalon()" class="w-full p-3 border-2 rounded-xl focus:border-azul-rey bg-gray-50">
+                            <option value="">-- Elegir Salón --</option>
+                        </select>
+                    </div>
+                    <div class="border-t pt-4">
+                        <label class="block text-gray-700 font-bold mb-2 text-sm uppercase text-blue-600">Ver mi Director de Curso:</label>
+                        <select id="select-curso" onchange="filtrarPorCurso()" class="w-full p-3 border-2 border-blue-200 rounded-xl focus:border-azul-rey bg-blue-50">
+                            <option value="">-- Elegir Curso --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="area-docente-resultados" class="hidden space-y-4">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                    <div id="titulo-tabla" class="bg-azul-rey p-3 text-white font-bold text-center uppercase tracking-widest text-xs"></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100 text-azul-rey text-[10px] uppercase">
+                                <tr>
+                                    <th class="p-3">Estudiante</th>
+                                    <th class="p-3 text-right">Código / Salón</th>
+                                </tr>
+                            </thead>
+                            <tbody id="body-tabla" class="divide-y text-xs"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="consolidado-grado" class="bg-white p-5 rounded-2xl shadow-xl border-2 border-blue-100 hidden">
+                    <h3 class="font-black text-azul-rey mb-4 uppercase text-center text-sm border-b pb-2">Resumen de Pruebas</h3>
+                    <div id="lista-consolidado" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- PANEL DE REGLAS (también visible aquí, en Salones) -->
+            <div id="reglas-panel-salones" class="mt-4"></div>
+        </div>
+
+        <!-- SECCION HORARIO DOCENTE - Día de Pruebas 2do Trimestre -->
+        <div id="seccion-horario" class="hidden space-y-4">
+
+            <div class="bg-white p-1.5 rounded-xl shadow-lg flex gap-1">
+                <button onclick="setVistaHorario('docente')" id="tab-doc" class="flex-1 py-2 rounded-lg font-bold text-[11px] uppercase bg-azul-rey text-white">Por Docente</button>
+                <button onclick="setVistaHorario('aula')" id="tab-aula" class="flex-1 py-2 rounded-lg font-bold text-[11px] uppercase text-azul-rey">Por Aula</button>
+                <button onclick="setVistaHorario('general')" id="tab-general" class="flex-1 py-2 rounded-lg font-bold text-[11px] uppercase text-azul-rey">General</button>
+            </div>
+
+            <!-- VISTA POR DOCENTE -->
+            <div id="vista-docente">
+                <div class="bg-white p-5 rounded-2xl shadow-xl border-t-4 border-azul-rey">
+                    <label class="block text-gray-700 font-bold mb-2 text-sm uppercase">Buscar por Docente:</label>
+                    <select id="select-docente-horario" onchange="buscarHorarioDocente()" class="w-full p-3 border-2 rounded-xl focus:border-azul-rey bg-gray-50">
+                        <option value="">-- Elegir Docente --</option>
+                    </select>
+                </div>
+                <div id="resultado-docente" class="mt-4 space-y-2"></div>
+            </div>
+
+            <!-- VISTA POR AULA -->
+            <div id="vista-aula" class="hidden">
+                <div class="bg-white p-5 rounded-2xl shadow-xl border-t-4 border-azul-rey">
+                    <label class="block text-gray-700 font-bold mb-2 text-sm uppercase text-blue-600">Ver por Aula:</label>
+                    <select id="select-aula-horario" onchange="filtrarHorarioPorAula()" class="w-full p-3 border-2 border-blue-200 rounded-xl focus:border-azul-rey bg-blue-50">
+                        <option value="">-- Elegir Aula --</option>
+                    </select>
+                </div>
+                <div id="resultado-aula" class="mt-4 space-y-2"></div>
+            </div>
+
+            <!-- VISTA GENERAL -->
+            <div id="vista-general" class="hidden space-y-4">
+                <div id="tarjetas-general" class="space-y-4"></div>
+            </div>
+
+            <!-- PANEL DE REGLAS (siempre visible) -->
+            <div id="reglas-panel-horario" class="mt-4"></div>
+        </div>
+    </main>
+
+    <script>
+        const estudiantes = [{"n": "ACOSTA MAZO JUNIOR SAMUEL", "c": "605", "d": "4060501", "s": 1}, {"n": "AGUDELO CARDONA JUAN DAVID", "c": "605", "d": "4060502", "s": 2}, {"n": "ALVAREZ CASTAÑEDA JERSON EDREY", "c": "605", "d": "4060503", "s": 3}, {"n": "ALVAREZ ROBAYO LUCIANA", "c": "605", "d": "4060504", "s": 4}, {"n": "BALLEN PINZON NIKOLL VALERIA", "c": "605", "d": "4060505", "s": 8}, {"n": "BAQUERO TORRES MACGYVER SNEYDER", "c": "605", "d": "4060506", "s": 9}, {"n": "BLANCO OCHOA ELIANA", "c": "605", "d": "4060507", "s": 10}, {"n": "BLANCO SEPULVEDA CAMILO JOSE", "c": "605", "d": "4060508", "s": 11}, {"n": "CASTRO CARVAJAL SARA VALENTINA", "c": "605", "d": "4060509", "s": 12}, {"n": "CESPEDES HERRERA BRANDON STIVEN", "c": "605", "d": "4060510", "s": 13}, {"n": "DIAZ MORON VICTOR ALEJANDRO", "c": "605", "d": "4060511", "s": 14}, {"n": "DUEÑAS DIAZ EDGAR STEVEN", "c": "605", "d": "4060512", "s": 15}, {"n": "GALARZA LEYTON LAURA PILAR", "c": "605", "d": "4060513", "s": 16}, {"n": "GIRALDO PALACIOS VALERIA", "c": "605", "d": "4060514", "s": 17}, {"n": "HENAO BARRERA JUSTIN YESID", "c": "605", "d": "4060515", "s": 18}, {"n": "HERNANDEZ NARVAEZ ISABEL JULIANA", "c": "605", "d": "4060516", "s": 20}, {"n": "HUERTAS ROBAYO MARIANA", "c": "605", "d": "4060517", "s": 1}, {"n": "MAHECHA LANCHEROS YEISID DARIHAN", "c": "605", "d": "4060518", "s": 2}, {"n": "MONROY SANCHEZ ANDERSON SNEYDER", "c": "605", "d": "4060519", "s": 3}, {"n": "MUÑOZ NIÑO SEBASTIAN ALEXANDER", "c": "605", "d": "4060520", "s": 4}, {"n": "OCAMPO RODRIGUEZ SARA VALENTINA", "c": "605", "d": "4060521", "s": 8}, {"n": "OCANDO DIAZ ISAAC ALEJANDRO", "c": "605", "d": "4060522", "s": 9}, {"n": "PIÑEROS CRUZ JUAN DAVID", "c": "605", "d": "4060523", "s": 10}, {"n": "REINA MORENO OWEN YOEL", "c": "605", "d": "4060524", "s": 11}, {"n": "RIVERA GARCIA EIVER ESMIT", "c": "605", "d": "4060525", "s": 12}, {"n": "RODRIGUEZ ORTEGA ASHLEY KATHERIN", "c": "605", "d": "4060526", "s": 13}, {"n": "ROJAS CEPEDA HELLEN NICOLLE", "c": "605", "d": "4060527", "s": 14}, {"n": "SALCEDO RAMOS NAZARETH ALEJANDRA", "c": "605", "d": "4060528", "s": 15}, {"n": "TAMARA LIZCANO RICHARD MATHIAS", "c": "605", "d": "4060529", "s": 16}, {"n": "TORREALBA MUJICA DENYER JAVIER", "c": "605", "d": "4060530", "s": 17}, {"n": "URREGO RODRIGUEZ OSHTIN LEONARDO", "c": "605", "d": "4060531", "s": 18}, {"n": "VALENCIA OSORIO KEVIN", "c": "605", "d": "4060532", "s": 20}, {"n": "VASQUEZ VALDERRAMA FRAMSELYZ DEL VALLE", "c": "605", "d": "4060533", "s": 1}, {"n": "VILLALBA RODRIGUEZ JHON STIVEN", "c": "605", "d": "4060534", "s": 2}, {"n": "AMAYA ALVARES DANIEL SANTIAGO", "c": "606", "d": "4060601", "s": 3}, {"n": "ARENAS COBOS SERGIO ANDRES", "c": "606", "d": "4060602", "s": 4}, {"n": "BARRIOS RUIZ ISABELLA", "c": "606", "d": "4060603", "s": 8}, {"n": "BERNAL MEJIA ALEX DAVID", "c": "606", "d": "4060604", "s": 9}, {"n": "BRAVO MORENO PAULA ANDREA", "c": "606", "d": "4060605", "s": 10}, {"n": "CAMACHO OSPINA WILLER SMITH", "c": "606", "d": "4060606", "s": 11}, {"n": "CAMELO JARAMILLO YEISON ANDRES", "c": "606", "d": "4060607", "s": 12}, {"n": "CASTAÑEDA GRATEROL DAILISMAR SOFIA", "c": "606", "d": "4060608", "s": 13}, {"n": "CASTRO MATAMOROS ANGELI YULIANA", "c": "606", "d": "4060609", "s": 14}, {"n": "CORTES RUBIO MAICOL ANDREY", "c": "606", "d": "4060610", "s": 15}, {"n": "CUELLAR ACERO ZARA BERED", "c": "606", "d": "4060611", "s": 16}, {"n": "DAVID GONZALEZ JOSMAN DUVAN", "c": "606", "d": "4060612", "s": 17}, {"n": "DELGADO ARANGUREN SAMUEL ANDRES", "c": "606", "d": "4060613", "s": 18}, {"n": "DIAZ GARCIA KENYERBER JOSE", "c": "606", "d": "4060614", "s": 20}, {"n": "DUQUE TORRES VALERY SAMANTHA", "c": "606", "d": "4060615", "s": 1}, {"n": "ECHEVERRI MANRRIQUE MIGUEL ANGEL", "c": "606", "d": "4060616", "s": 2}, {"n": "GARCIA ACACIO ISABEL SOFIA", "c": "606", "d": "4060617", "s": 3}, {"n": "GONZALEZ SANCHEZ JEREMY ALEJANDRO", "c": "606", "d": "4060618", "s": 4}, {"n": "GUZMAN LOPEZ EDWIN HERNAN", "c": "606", "d": "4060619", "s": 8}, {"n": "GUZMAN QUIMBAY ANTONELLA", "c": "606", "d": "4060620", "s": 9}, {"n": "GUZMAN QUIMBAY SARA ISABELLA", "c": "606", "d": "4060621", "s": 10}, {"n": "HERRERA MOYA LUISA FERNANDA", "c": "606", "d": "4060622", "s": 11}, {"n": "HURTADO RAMIREZ SOREYI BRITNHY", "c": "606", "d": "4060623", "s": 12}, {"n": "KLINGER HURTADO JOEL", "c": "606", "d": "4060624", "s": 13}, {"n": "LOPEZ PEREZ ANGELINA PAOLA", "c": "606", "d": "4060625", "s": 14}, {"n": "LUQUE ROJAS ALAN SEBASTIAN", "c": "606", "d": "4060626", "s": 15}, {"n": "MARTINEZ DUARTE DARALYN SAMANTHA", "c": "606", "d": "4060627", "s": 16}, {"n": "MOLANO SALAZAR DEIBER SANTIAGO", "c": "606", "d": "4060628", "s": 17}, {"n": "MORALES RICAURTE YOSTIN SNEIDER", "c": "606", "d": "4060629", "s": 18}, {"n": "PINZON ATEHORTUA CAREN SOFIA", "c": "606", "d": "4060630", "s": 20}, {"n": "RINTA ORTIZ DHYLAND SHNEYDER", "c": "606", "d": "4060631", "s": 1}, {"n": "RIVAS MERCHAN JOSUE DANIEL", "c": "606", "d": "4060632", "s": 2}, {"n": "RIVERO JULIO KEILYMAR SOFIA", "c": "606", "d": "4060633", "s": 3}, {"n": "ROMERO GONZALEZ ALISON", "c": "606", "d": "4060634", "s": 4}, {"n": "SILVA MEJIA SOFIA", "c": "606", "d": "4060635", "s": 8}, {"n": "VARGAS BELTRAN ANGELL MARIANA", "c": "606", "d": "4060636", "s": 9}, {"n": "VARGAS JIMENEZ ALISSON JULIETH", "c": "606", "d": "4060637", "s": 10}, {"n": "VARGAS ORJUELA CRISTIAN JULIAN", "c": "606", "d": "4060638", "s": 11}, {"n": "WINCLAR ROYERO ALISSON SHARLOTH", "c": "606", "d": "4060639", "s": 12}, {"n": "AGUILAR ROMERO ISMARY SOFIA", "c": "607", "d": "4060701", "s": 13}, {"n": "AHUANARI CARVAJAL ZAHARAY ITATY", "c": "607", "d": "4060702", "s": 14}, {"n": "AREVALO LASSO EVELIN SOFIA", "c": "607", "d": "4060703", "s": 15}, {"n": "BOSSA BUSTOS MARIA JOSE", "c": "607", "d": "4060704", "s": 16}, {"n": "BOTERO AGUIRRE JOHAN STIVEN", "c": "607", "d": "4060705", "s": 17}, {"n": "CARDOZO ANZOLA DANWEER NICOLAS", "c": "607", "d": "4060706", "s": 18}, {"n": "CARRILLO SANCHEZ AXEL DAVID", "c": "607", "d": "4060707", "s": 20}, {"n": "CHACON MURCIA JUAN ESTEBAN", "c": "607", "d": "4060708", "s": 1}, {"n": "CORDOBA GOMEZ EMILY SOFIA", "c": "607", "d": "4060709", "s": 2}, {"n": "CORDOBA GOMEZ NICOL DAIANA", "c": "607", "d": "4060710", "s": 3}, {"n": "GARAY OROZCO BAYRON YAMPIER", "c": "607", "d": "4060711", "s": 4}, {"n": "GONZALEZ JIMENEZ LORELEY", "c": "607", "d": "4060712", "s": 8}, {"n": "GUARAMATA LAREZ VALENTINA NICOLL", "c": "607", "d": "4060713", "s": 9}, {"n": "HENAO RIVERA HELLEN MARIANA", "c": "607", "d": "4060714", "s": 10}, {"n": "LARA MARTINEZ DANNA SOPHIA", "c": "607", "d": "4060715", "s": 11}, {"n": "LEON CORDERO STEBAN ANDRES", "c": "607", "d": "4060716", "s": 12}, {"n": "MARIN MARIN DAVIELYS LORENA", "c": "607", "d": "4060717", "s": 13}, {"n": "MARTINEZ GALVIZ MATHIAS ELIU", "c": "607", "d": "4060718", "s": 14}, {"n": "MATAMOROS VARGAS OSMAN ALEXANDER", "c": "607", "d": "4060719", "s": 15}, {"n": "MENDEZ GIRON HELEN XIOMARA", "c": "607", "d": "4060720", "s": 16}, {"n": "MOLINA ZAMBRANO HIMBERLYN ROSANNY", "c": "607", "d": "4060721", "s": 17}, {"n": "MORENO MUÑOZ BEIMAR ALEJANDRO", "c": "607", "d": "4060722", "s": 18}, {"n": "OROZCO CARVAJAL JOSSIE ESTEBAN", "c": "607", "d": "4060723", "s": 20}, {"n": "ORTIZ HERRERA DIEGO ANDRES", "c": "607", "d": "4060724", "s": 1}, {"n": "OSPINA RODRIGUEZ JOTSUAR FRANCISCO", "c": "607", "d": "4060725", "s": 2}, {"n": "OVALLE CARO ERICK ALEXANDER", "c": "607", "d": "4060726", "s": 3}, {"n": "OVIEDO GUERRERO KAREN XIMENA", "c": "607", "d": "4060727", "s": 4}, {"n": "POSADA LOBO LEINER ESTEBAN", "c": "607", "d": "4060728", "s": 8}, {"n": "PRADA ORJUELA SAMANTA", "c": "607", "d": "4060729", "s": 9}, {"n": "QUEMBA HINCAPIE JULIAN STIVEN", "c": "607", "d": "4060730", "s": 10}, {"n": "RAMIREZ VELANDIA STEVAN RENE", "c": "607", "d": "4060731", "s": 11}, {"n": "REINA LEON HELEN SARAY", "c": "607", "d": "4060732", "s": 12}, {"n": "REYES CASTRO KEVIN STIP", "c": "607", "d": "4060733", "s": 13}, {"n": "RODRIGUEZ CAMPO JERSSON JAVIER", "c": "607", "d": "4060734", "s": 14}, {"n": "ROMERO BAYONA SAMANTHA DUVAY", "c": "607", "d": "4060735", "s": 15}, {"n": "ROMERO MORENO BREYNER MAURICIO", "c": "607", "d": "4060736", "s": 16}, {"n": "RUBIO GIRON SALOME", "c": "607", "d": "4060737", "s": 17}, {"n": "ZUÑIGA BUITRAGO CAREN BRIYITH", "c": "607", "d": "4060738", "s": 18}, {"n": "AYALA GONZALEZ LAURA VALERIA", "c": "608", "d": "4060801", "s": 20}, {"n": "BARRETO CALDERON DARWIN ALEJANDRO", "c": "608", "d": "4060802", "s": 1}, {"n": "CANCELADO RODRIGUEZ JARED SANTIAGO", "c": "608", "d": "4060803", "s": 2}, {"n": "CASTILLO ARIAS SAMUEL DAVID", "c": "608", "d": "4060804", "s": 3}, {"n": "CESPEDES HERRERA EMILY SOFIA", "c": "608", "d": "4060805", "s": 4}, {"n": "CUEVAS HERRERA ROLLER ESTIVEN", "c": "608", "d": "4060806", "s": 8}, {"n": "CUEVAS HERRERA VALERY SOFIA", "c": "608", "d": "4060807", "s": 9}, {"n": "CUITIVA CORCHUELO JOHAN ESTIVEN", "c": "608", "d": "4060808", "s": 10}, {"n": "DIAZ RIVEROS SARA MICHELL", "c": "608", "d": "4060809", "s": 11}, {"n": "GONZALEZ VALENZUELA WEIDER ARTURO", "c": "608", "d": "4060810", "s": 12}, {"n": "GUAPACHO ALAPE KAROL ESTEFANY", "c": "608", "d": "4060811", "s": 13}, {"n": "LEGUIZAMO ROJAS SAMARA", "c": "608", "d": "4060812", "s": 14}, {"n": "LUNA SANTAMARIA MICHELLE NAHIARA", "c": "608", "d": "4060813", "s": 15}, {"n": "MACANA HERRAN VALERY MARIANA", "c": "608", "d": "4060814", "s": 16}, {"n": "MARTINEZ ISAZA JUAN FELIPE", "c": "608", "d": "4060815", "s": 17}, {"n": "MATEUS RIAÑO YOLTZIN SAMARA", "c": "608", "d": "4060816", "s": 18}, {"n": "MESA PEÑUELA JENSY DANIELA", "c": "608", "d": "4060817", "s": 20}, {"n": "MORENO SUBA BRAYAN SMITH", "c": "608", "d": "4060818", "s": 1}, {"n": "MORENO SUBA YOAN ANTONIO", "c": "608", "d": "4060819", "s": 2}, {"n": "MUÑOZ BARRAGAN VALERY ALEXANDRA", "c": "608", "d": "4060820", "s": 3}, {"n": "OIDOR LISCANO CRISTOPHER DAVID", "c": "608", "d": "4060821", "s": 4}, {"n": "OVALLE DIAZ DYLAN", "c": "608", "d": "4060822", "s": 8}, {"n": "PEREZ GUTIERREZ JOHANGEL", "c": "608", "d": "4060823", "s": 9}, {"n": "PERILLA DAZA CAROL MARIANA", "c": "608", "d": "4060824", "s": 10}, {"n": "REDIN QUIÑONES MARIA JOSE", "c": "608", "d": "4060825", "s": 11}, {"n": "RIERA GARCIA RYANS JESUS", "c": "608", "d": "4060826", "s": 12}, {"n": "RINCON SANCHEZ DANA SOFIA", "c": "608", "d": "4060827", "s": 13}, {"n": "ROJAS CELY LEIDY KARINA", "c": "608", "d": "4060828", "s": 14}, {"n": "ROZO HERRADA ANDRES SANTIAGO", "c": "608", "d": "4060829", "s": 15}, {"n": "SASTOQUE CORREDOR WILKER SANTIAGO", "c": "608", "d": "4060830", "s": 16}, {"n": "SOLORZANO SANTOS CAMILA MARIA VICTORIA", "c": "608", "d": "4060831", "s": 17}, {"n": "TORRES ROBAYO DEIBY SANTIAGO", "c": "608", "d": "4060832", "s": 18}, {"n": "VASQUEZ VILLAMIZAR MARLON DUVAN", "c": "608", "d": "4060833", "s": 20}, {"n": "VILLALOBOS AÑEZ ADRIAINYS VALENTINA", "c": "608", "d": "4060834", "s": 1}, {"n": "ALFARO GUEVARA CAROLAY ANGELICA", "c": "705", "d": "4070501", "s": 2}, {"n": "ALVAREZ IBARGUEN MATLIN ALINA", "c": "705", "d": "4070502", "s": 3}, {"n": "BARRIOS ZUÑIGA JHONNYS ALBERTO", "c": "705", "d": "4070503", "s": 4}, {"n": "BERMUDEZ MAMBUSCAY JHOAN ESTEBAN", "c": "705", "d": "4070504", "s": 8}, {"n": "BERNAL VARGAS MARIA FERNANDA", "c": "705", "d": "4070505", "s": 9}, {"n": "BOLIVAR CERPA LAURENT DANIELA", "c": "705", "d": "4070506", "s": 10}, {"n": "CAMARGO AGUIRRE JUAN SEBASTIAN", "c": "705", "d": "4070507", "s": 11}, {"n": "CERPA VANEGAS KEVIN DAVID", "c": "705", "d": "4070508", "s": 12}, {"n": "DIAZ BAUTISTA MICHAEL SMIT", "c": "705", "d": "4070509", "s": 13}, {"n": "FUNES CADENA JUAN PABLO", "c": "705", "d": "4070510", "s": 14}, {"n": "GARAY QUINTERO ALAN ANDRES", "c": "705", "d": "4070511", "s": 15}, {"n": "GIRON MARULANDA JUAN DAVID", "c": "705", "d": "4070512", "s": 16}, {"n": "GUAPACHO ALAPE AZUMI VALERIA", "c": "705", "d": "4070513", "s": 17}, {"n": "GUARAMATA LAREZ NICOLL VALENTINA", "c": "705", "d": "4070514", "s": 18}, {"n": "HERNANDEZ BARRERA JOSUE SEBASTIAN", "c": "705", "d": "4070515", "s": 20}, {"n": "HIDROBO CACHIGUANGO JOSSELYN ALEJANDRA", "c": "705", "d": "4070516", "s": 1}, {"n": "MANJARRES CANTILLO DANNA VALENTINA", "c": "705", "d": "4070517", "s": 2}, {"n": "MASMELA MENDOZA JEFERSON ESTEBAN", "c": "705", "d": "4070518", "s": 3}, {"n": "MENDOZA GAMBA SARA VALENTINA", "c": "705", "d": "4070519", "s": 4}, {"n": "MORENO MARTINEZ JOHAN STIVEN", "c": "705", "d": "4070520", "s": 8}, {"n": "MORENO MARTINEZ YISURIS KARINA", "c": "705", "d": "4070521", "s": 9}, {"n": "MORENO QUIROGA LEIDY JOHANNA", "c": "705", "d": "4070522", "s": 10}, {"n": "MUÑOZ TORRADO DANNA SOFIA", "c": "705", "d": "4070523", "s": 11}, {"n": "MUÑOZ VIRGUEZ DALAY SOFIA", "c": "705", "d": "4070524", "s": 12}, {"n": "NARANJO GARCIA MICHEL ALEXANDRA", "c": "705", "d": "4070525", "s": 13}, {"n": "ORDOÑEZ ZUÑIGA ANGEL DAMIAN", "c": "705", "d": "4070526", "s": 14}, {"n": "ORDUZ ARIZA ANDRES FELIPE", "c": "705", "d": "4070527", "s": 15}, {"n": "ORTIZ ORTIZ NICOL MICHEL", "c": "705", "d": "4070528", "s": 16}, {"n": "PIRAQUIVE POLOCHE DANNA GABRIELA", "c": "705", "d": "4070529", "s": 17}, {"n": "RIVERA TAPIAS JUAN DIEGO", "c": "705", "d": "4070530", "s": 18}, {"n": "RODRIGUEZ GALEANO MIGUEL ANGEL", "c": "705", "d": "4070531", "s": 20}, {"n": "RODRIGUEZ SAAVEDRA JUAN RICARDO", "c": "705", "d": "4070532", "s": 1}, {"n": "ROMERO BAYONA SAMUEL ALEJANDRO", "c": "705", "d": "4070533", "s": 2}, {"n": "ROMERO MERCHAN CARLOS SANTIAGO", "c": "705", "d": "4070534", "s": 3}, {"n": "ROMERO TOLOZA LINA MARCELA", "c": "705", "d": "4070535", "s": 4}, {"n": "SIERRA ROJAS JUAN ESTEBAN", "c": "705", "d": "4070536", "s": 8}, {"n": "TABARES CORREA SAMUEL ISMAEL", "c": "705", "d": "4070537", "s": 9}, {"n": "TRUJILLO VILLAMIL DILAN MAURICIO", "c": "705", "d": "4070538", "s": 10}, {"n": "VEGA DEVIA DANNA SOFIA", "c": "705", "d": "4070539", "s": 11}, {"n": "ZAMBRANO RIVA ANTHONELLA ALESSANDRA", "c": "705", "d": "4070540", "s": 12}, {"n": "AVILA MUNDARAY ALIESFER JOSE", "c": "706", "d": "4070601", "s": 13}, {"n": "AVILA SILVA YENCY MARIANA", "c": "706", "d": "4070602", "s": 14}, {"n": "BAEZ BORDA JHOAN SEBASTIAN", "c": "706", "d": "4070603", "s": 15}, {"n": "BASTIDAS SANDOVAL DAVID SANTIAGO", "c": "706", "d": "4070604", "s": 16}, {"n": "BOBADILLA BONILLA WILLIAM ESTEBAN", "c": "706", "d": "4070605", "s": 17}, {"n": "BUSTAMANTE SUAREZ SOFIA ALEXANDRA", "c": "706", "d": "4070606", "s": 18}, {"n": "CANTILLO POTES LAURA MARCELA", "c": "706", "d": "4070607", "s": 20}, {"n": "CASTILLO GARCIA JOAN DAVID", "c": "706", "d": "4070608", "s": 1}, {"n": "DE AVILA MARRUGO LUIS SANTIAGO", "c": "706", "d": "4070609", "s": 2}, {"n": "ECHAVEZ VARGAS NIRAY EMMANUEL", "c": "706", "d": "4070610", "s": 3}, {"n": "FORERO ALDANA EMILY VALENTINA", "c": "706", "d": "4070611", "s": 4}, {"n": "GARCIA ZULUAGA ASHLEE DANIELA", "c": "706", "d": "4070612", "s": 8}, {"n": "GONZALEZ GOMEZ LAURA NATALIA", "c": "706", "d": "4070613", "s": 9}, {"n": "GONZALEZ LOPEZ CAROL JOHANA", "c": "706", "d": "4070614", "s": 10}, {"n": "GONZALEZ VALENZUELA JUAN PABLO", "c": "706", "d": "4070615", "s": 11}, {"n": "GRATEROL DE LA HOZ ASTRID FERNANDA", "c": "706", "d": "4070616", "s": 12}, {"n": "GUERRA VARGAS HELLEN SOFIA", "c": "706", "d": "4070617", "s": 13}, {"n": "LEON RICARDO JHOAN SANTIAGO", "c": "706", "d": "4070618", "s": 14}, {"n": "LOPEZ CALDERON ESTEBAN", "c": "706", "d": "4070619", "s": 15}, {"n": "MAHECHA LANCHEROS SAMIR DAVID", "c": "706", "d": "4070620", "s": 16}, {"n": "MARIN MARIN DALIANNYS ALEJANDRA", "c": "706", "d": "4070621", "s": 17}, {"n": "MEJIA BONILLA DANIEL JAIR", "c": "706", "d": "4070622", "s": 18}, {"n": "MENDEZ AHUANARI SCARLET", "c": "706", "d": "4070623", "s": 20}, {"n": "MEZA DE AVILA SANTIAGO", "c": "706", "d": "4070624", "s": 1}, {"n": "MORA RAMIREZ ISABELLA", "c": "706", "d": "4070625", "s": 2}, {"n": "MOSQUERA OCORO BRIHANA SELENY", "c": "706", "d": "4070626", "s": 3}, {"n": "NARANJO BRISEÑO WILLIAN JOSUE", "c": "706", "d": "4070627", "s": 4}, {"n": "ORTEGA CHAVARRO DILAN NICOLAS", "c": "706", "d": "4070628", "s": 8}, {"n": "PUSHAINA PUSHAINA LUISA MARIA", "c": "706", "d": "4070629", "s": 9}, {"n": "RAMOS BAUTISTA LEBSA PAOLA", "c": "706", "d": "4070630", "s": 10}, {"n": "REYES ROMERO EIMY GISELLE", "c": "706", "d": "4070631", "s": 11}, {"n": "ROBAYO CRIOLLO JHOAN FELIPE", "c": "706", "d": "4070632", "s": 12}, {"n": "RODRIGUEZ CAUSIL FRY SAMUEL", "c": "706", "d": "4070633", "s": 13}, {"n": "RODRIGUEZ RODRIGUEZ JUAN SEBASTIAN", "c": "706", "d": "4070634", "s": 14}, {"n": "RODRIGUEZ TORRES WILSON JOSE", "c": "706", "d": "4070635", "s": 15}, {"n": "ROJAS PEREZ JUAN CAMILO", "c": "706", "d": "4070636", "s": 16}, {"n": "SIMBAQUEVA PINZON JUAN CAMILO", "c": "706", "d": "4070637", "s": 17}, {"n": "TAMBO JIMENEZ NICOL SARAY", "c": "706", "d": "4070638", "s": 18}, {"n": "TORRES ARENILLA MAICOL JAMPIER", "c": "706", "d": "4070639", "s": 20}, {"n": "TORRES OSORIO JOHAN STIVEN", "c": "706", "d": "4070640", "s": 1}, {"n": "ACOSTA CAMACARO SHANTAL GABRIELA", "c": "707", "d": "4070701", "s": 2}, {"n": "AÑEZ RODRIGUEZ ANGEL ALBERTO", "c": "707", "d": "4070702", "s": 3}, {"n": "BARRETO GONZALEZ JUAN DAVID", "c": "707", "d": "4070703", "s": 4}, {"n": "BARRETO GONZALEZ JUAN FELIPE", "c": "707", "d": "4070704", "s": 8}, {"n": "CAICEDO CAMPOS ALEXANDER", "c": "707", "d": "4070705", "s": 9}, {"n": "CASCAVITA MALDONADO SARA VALENTINA", "c": "707", "d": "4070706", "s": 10}, {"n": "CASTAÑO GUERRERO YOSTIN ALEXIS", "c": "707", "d": "4070707", "s": 11}, {"n": "CORTES MALDONADO PAULA ANDREA", "c": "707", "d": "4070708", "s": 12}, {"n": "DELGADO ARANGUREN DANIEL ESTIBEN", "c": "707", "d": "4070709", "s": 13}, {"n": "ESPEJO TORRES JOSE HUMBERTO", "c": "707", "d": "4070710", "s": 14}, {"n": "GARCIA GALINDEZ ALBANI VALENTINA", "c": "707", "d": "4070711", "s": 15}, {"n": "GARCIA GUERRERO BRAYAN MANUEL", "c": "707", "d": "4070712", "s": 16}, {"n": "GARCIA GUERRERO DANA MILETH", "c": "707", "d": "4070713", "s": 17}, {"n": "GARCIA HILARION LEIDI FERNANDA", "c": "707", "d": "4070714", "s": 18}, {"n": "GOITIA PACHECO HILARY SOPHIA", "c": "707", "d": "4070715", "s": 20}, {"n": "GOMEZ OSORIO NATALIA SOFIA", "c": "707", "d": "4070716", "s": 1}, {"n": "GONZALEZ PADILLA EMILY SOFIA", "c": "707", "d": "4070717", "s": 2}, {"n": "GULUMA HERNANDEZ DILAN ANDRES", "c": "707", "d": "4070718", "s": 3}, {"n": "JIMENEZ VEGA SANDRA MILENA", "c": "707", "d": "4070719", "s": 4}, {"n": "MARTINEZ SEGOVIA ERIC JOSE", "c": "707", "d": "4070720", "s": 8}, {"n": "MATA GONZALEZ ANDREA VALERIA", "c": "707", "d": "4070721", "s": 9}, {"n": "MONTALVO FERNANDEZ DEIMER", "c": "707", "d": "4070722", "s": 10}, {"n": "NARVAEZ CASTILLO DANNA ZULAY", "c": "707", "d": "4070723", "s": 11}, {"n": "NUÑEZ BEJARANO ISAAC JOSUE", "c": "707", "d": "4070724", "s": 12}, {"n": "ORTIZ GARZON KEVIN ANDRES", "c": "707", "d": "4070725", "s": 13}, {"n": "ORTIZ VILLEGAS DIEGO ALEJANDRO", "c": "707", "d": "4070726", "s": 14}, {"n": "OVALLE CARO PAULA DANIELA", "c": "707", "d": "4070727", "s": 15}, {"n": "QUIÑONEZ SANCHEZ DEIMAR STEVEN", "c": "707", "d": "4070728", "s": 16}, {"n": "RIVALDO QUEMBA WILLIAM ANDRES", "c": "707", "d": "4070729", "s": 17}, {"n": "ROBAYO GOMEZ ANGEL DAYAN", "c": "707", "d": "4070730", "s": 18}, {"n": "RODRIGUEZ MENDOZA SHAROL DAYANNA", "c": "707", "d": "4070731", "s": 20}, {"n": "RODRÍGUEZ FORERO EMILY JOHANNA", "c": "707", "d": "4070732", "s": 1}, {"n": "ROMERO SUAREZ SARA GABRIELA", "c": "707", "d": "4070733", "s": 2}, {"n": "SANTOS RAMIREZ JEIDY MARIANA", "c": "707", "d": "4070734", "s": 3}, {"n": "SIMBAQUEVA SANJUAN LESLY JULIE", "c": "707", "d": "4070735", "s": 4}, {"n": "SOLORZANO SANTOS VICTOR RAZIEL DE JESUS", "c": "707", "d": "4070736", "s": 8}, {"n": "TORRES MONTOYA ASHLY SOFIA", "c": "707", "d": "4070737", "s": 9}, {"n": "TRIANA OCAMPO LUIS FELIPE", "c": "707", "d": "4070738", "s": 10}, {"n": "ZAMBRANO BRITO DIOSMAR ALEXANDER", "c": "707", "d": "4070739", "s": 11}, {"n": "ZAMBRANO GONZALEZ ANYIMAR CAROLINA", "c": "707", "d": "4070740", "s": 12}, {"n": "ACOSTA JULIO JOEL JOSE", "c": "805", "d": "4080501", "s": 13}, {"n": "AGUIRRE GOMEZ ROGER ADRIAN", "c": "805", "d": "4080502", "s": 14}, {"n": "ANDRADE MALDONADO LICETH JULIANA", "c": "805", "d": "4080503", "s": 15}, {"n": "ANGULO IRIARTE HANNY MARCELA", "c": "805", "d": "4080504", "s": 16}, {"n": "ANGULO LUNA YOSSELIN MILAGRO", "c": "805", "d": "4080505", "s": 17}, {"n": "BAQUERO SALDAÑA JEFERSSON ANDRES", "c": "805", "d": "4080506", "s": 18}, {"n": "CAMARGO MONCADA TANIA CAROLINA", "c": "805", "d": "4080507", "s": 20}, {"n": "CAMARGO ORTIZ DERLYS SOFIA", "c": "805", "d": "4080508", "s": 1}, {"n": "CAMARGO VILLATE NICOLLE SOFIA", "c": "805", "d": "4080509", "s": 2}, {"n": "CARDONA PINEDA LUIS EDUARDO", "c": "805", "d": "4080510", "s": 3}, {"n": "CORREA MENDEZ KARLA XIMENA", "c": "805", "d": "4080511", "s": 4}, {"n": "DELGADO CASALLAS LUISA FERNANDA", "c": "805", "d": "4080512", "s": 8}, {"n": "DIAZ DELGADO HEIDY VALERIA", "c": "805", "d": "4080513", "s": 9}, {"n": "DUARTE GUZMAN JOHAN SNEIDER", "c": "805", "d": "4080514", "s": 10}, {"n": "GARCIA HERNANDEZ DILAN ANDRES", "c": "805", "d": "4080515", "s": 11}, {"n": "GARZON SOLAQUE DILANN SAMUEL", "c": "805", "d": "4080516", "s": 12}, {"n": "GOMEZ DIAZ RAFAEL ANDRES", "c": "805", "d": "4080517", "s": 13}, {"n": "HORLANDY PEREZ SANTIAGO", "c": "805", "d": "4080518", "s": 14}, {"n": "LOPEZ ISAZA JULIAN DAVID", "c": "805", "d": "4080519", "s": 15}, {"n": "MARIN HERNANDEZ ANDRES CAMILO", "c": "805", "d": "4080520", "s": 16}, {"n": "MARTINEZ GALEANO ISABELLA", "c": "805", "d": "4080521", "s": 17}, {"n": "MOLINA AYALA JAMES ALEXANDER", "c": "805", "d": "4080522", "s": 18}, {"n": "MORALES LINAREZ YENIFER ANDREINA", "c": "805", "d": "4080523", "s": 20}, {"n": "NIAMPIRA MORENO ESNEYDER STICK", "c": "805", "d": "4080524", "s": 1}, {"n": "NUÑEZ RODRIGUEZ JONAS EDUARDO", "c": "805", "d": "4080525", "s": 2}, {"n": "PADILLA CASTRO JHOSTIN", "c": "805", "d": "4080526", "s": 3}, {"n": "PINZON GONZALEZ DANIELA SOFIA", "c": "805", "d": "4080527", "s": 4}, {"n": "PRIETO GARZON LUISA XIMENA", "c": "805", "d": "4080528", "s": 8}, {"n": "RAMOS HERNANDEZ JASBLEIDY ESTEFANIA", "c": "805", "d": "4080529", "s": 9}, {"n": "REYES CORTES HELEN SALOME", "c": "805", "d": "4080530", "s": 10}, {"n": "RINTA ORTIZ ALLISON CAMILA", "c": "805", "d": "4080531", "s": 11}, {"n": "RODRIGUEZ ESCOBAR ESTEBAN", "c": "805", "d": "4080532", "s": 12}, {"n": "ROJAS CASTAÑEDA IVAN LEONEL", "c": "805", "d": "4080533", "s": 13}, {"n": "SANCHEZ ALDANA DANNA LORENA", "c": "805", "d": "4080534", "s": 14}, {"n": "SANTAMARIA PADILLA DYLAN SANTIAGO", "c": "805", "d": "4080535", "s": 15}, {"n": "SAYAGO MARQUEZ GABRIEL ALEXANDER", "c": "805", "d": "4080536", "s": 16}, {"n": "TELLEZ TORRES JHONATAN STIVEN", "c": "805", "d": "4080537", "s": 17}, {"n": "TORRES OSORIO MELANY", "c": "805", "d": "4080538", "s": 18}, {"n": "VALDELEON SANCHEZ NICOL GABRIELA", "c": "805", "d": "4080539", "s": 20}, {"n": "VALENCIA HURTADO MICHAEL STEVEN", "c": "805", "d": "4080540", "s": 1}, {"n": "ARDILA ABAUNZA SHAROLL MICHELL", "c": "806", "d": "4080601", "s": 2}, {"n": "AREVALO LASSO INGRI VALENTINA", "c": "806", "d": "4080602", "s": 3}, {"n": "AYALA HERNANDEZ JESUS ALEJANDRO", "c": "806", "d": "4080603", "s": 4}, {"n": "BASTIDAS SANDOVAL JUAN SEBASTIAN", "c": "806", "d": "4080604", "s": 8}, {"n": "BUSTOS SALINAS DANNA MICHELL", "c": "806", "d": "4080605", "s": 9}, {"n": "CALDERON CAMARGO ALEJANDRO", "c": "806", "d": "4080606", "s": 10}, {"n": "CAMARGO AVILA SARAH GABRIELA", "c": "806", "d": "4080607", "s": 11}, {"n": "CARDONA MANZANO LEILA DEBBIE", "c": "806", "d": "4080608", "s": 12}, {"n": "CARVAJAL RETAVISCA JEIMY ALEJANDRA", "c": "806", "d": "4080609", "s": 13}, {"n": "CASTILLO ALVAREZ CARLOS DANIEL", "c": "806", "d": "4080610", "s": 14}, {"n": "CASTILLO MADRIGAL DANIEL ALEJANDRO", "c": "806", "d": "4080611", "s": 15}, {"n": "DAZA MAESTRE MANUEL RICARDO", "c": "806", "d": "4080612", "s": 16}, {"n": "FLOREZ ESPINEL SARA GISELLE", "c": "806", "d": "4080613", "s": 17}, {"n": "FRANCO AVILA MIGUEL ANGEL", "c": "806", "d": "4080614", "s": 18}, {"n": "GALINDO JOYA YULIETH FERNANDA", "c": "806", "d": "4080615", "s": 20}, {"n": "GARCIA GUERRERO FEIBER DAVID", "c": "806", "d": "4080616", "s": 1}, {"n": "GARZON TORRES DILAN SNEIDER", "c": "806", "d": "4080617", "s": 2}, {"n": "GAVIRIA TARAZONA ISABELLA", "c": "806", "d": "4080618", "s": 3}, {"n": "GOMEZ MONTILLA JOHAN STEVEN", "c": "806", "d": "4080619", "s": 4}, {"n": "GUARIGUATA LOPEZ ALEXANGELIS", "c": "806", "d": "4080620", "s": 8}, {"n": "GUERRERO CIFUENTES SARA LILIANA", "c": "806", "d": "4080621", "s": 9}, {"n": "HERNANDEZ ROMERO MARIA ALEJANDRA", "c": "806", "d": "4080622", "s": 10}, {"n": "JIMENEZ CARRANZA EMELY SARAY", "c": "806", "d": "4080623", "s": 11}, {"n": "LATORRE VASQUEZ LEIDY YOLANDA", "c": "806", "d": "4080624", "s": 12}, {"n": "MASMELA MENDOZA ANYI MILENA", "c": "806", "d": "4080625", "s": 13}, {"n": "ORTIZ BOTACHE JOHAN ANDRES", "c": "806", "d": "4080626", "s": 14}, {"n": "PARRA LEON CAMILO ANDRES", "c": "806", "d": "4080627", "s": 15}, {"n": "PEREZ PEDRAZA DANNA YORLEY", "c": "806", "d": "4080628", "s": 16}, {"n": "POLANCO CHIRINOS ORLIANNY VALENTINA", "c": "806", "d": "4080629", "s": 17}, {"n": "PRIETO HERRERA FERNANDO", "c": "806", "d": "4080630", "s": 18}, {"n": "PRIETO PENCUE LAURA XIMENA", "c": "806", "d": "4080631", "s": 20}, {"n": "RAMIREZ GALEANO JESUS DAVID", "c": "806", "d": "4080632", "s": 1}, {"n": "ROJAS CELY JUAN PABLO", "c": "806", "d": "4080633", "s": 2}, {"n": "ROMERO CORDOBA MARIA PAULA", "c": "806", "d": "4080634", "s": 3}, {"n": "SALGADO BONILLA HEINER JAVIER", "c": "806", "d": "4080635", "s": 4}, {"n": "SANTAMARIA SANCHEZ ALLISON TATIANA", "c": "806", "d": "4080636", "s": 8}, {"n": "VERGARA BONILLA MARIANA", "c": "806", "d": "4080637", "s": 9}, {"n": "VILLADIEGO REGINO EDI JOSE", "c": "806", "d": "4080638", "s": 10}, {"n": "ALMARIO VASQUEZ HEINER ANDRES", "c": "807", "d": "4080701", "s": 11}, {"n": "AMARILES SANCHEZ EVELYN XIOMARA", "c": "807", "d": "4080702", "s": 12}, {"n": "ARANGO MORALES KAROL DANIELA", "c": "807", "d": "4080703", "s": 13}, {"n": "ASCENCIO GUZMAN KAREN ANDREA", "c": "807", "d": "4080704", "s": 14}, {"n": "BARON RUIZ XIOMARA", "c": "807", "d": "4080705", "s": 15}, {"n": "BARRERA GONZALES JHOAN ALEXIIS", "c": "807", "d": "4080706", "s": 16}, {"n": "BARRETO GONZALEZ EINYEL JEDSUA", "c": "807", "d": "4080707", "s": 17}, {"n": "BARRIOS CARRASCO CLEIBER JEREMIAS", "c": "807", "d": "4080708", "s": 18}, {"n": "BOBADILLA BONILLA JOSE ALEJANDRO", "c": "807", "d": "4080709", "s": 20}, {"n": "CABEZAS ESTACIO DIANA CAROLINA", "c": "807", "d": "4080710", "s": 1}, {"n": "CAMARGO BARRERO VALERIA", "c": "807", "d": "4080711", "s": 2}, {"n": "CRUZ CABALLERO JOHAN NICOLAS", "c": "807", "d": "4080712", "s": 3}, {"n": "DIAZ HERRERA TANIA FERNANDA", "c": "807", "d": "4080713", "s": 4}, {"n": "DIAZ SANTOS JOEL ADRIAN", "c": "807", "d": "4080714", "s": 8}, {"n": "FLORES GONZALEZ ANYHUZKA JAIVER", "c": "807", "d": "4080715", "s": 9}, {"n": "GARCIA SALGADO SAMUEL", "c": "807", "d": "4080716", "s": 10}, {"n": "ISASA PALENCIA ALISON JANETH", "c": "807", "d": "4080717", "s": 11}, {"n": "LIÑAN ARIZA JHON FREY", "c": "807", "d": "4080718", "s": 12}, {"n": "MEJIA QUINTERO ANA VALENTINA", "c": "807", "d": "4080719", "s": 13}, {"n": "MEJIA QUINTERO JOSE MIGUEL", "c": "807", "d": "4080720", "s": 14}, {"n": "MONTALVO FERNANDEZ DAYANA JULIETH", "c": "807", "d": "4080721", "s": 15}, {"n": "MORA CIFUENTES EMANUEL SANTIAGO", "c": "807", "d": "4080722", "s": 16}, {"n": "MORA CIFUENTES JUAN ESTEBAN", "c": "807", "d": "4080723", "s": 17}, {"n": "MORON BAQUERO NICOLAS ANDREY", "c": "807", "d": "4080724", "s": 18}, {"n": "MUÑOZ BARRAGAN YORDAN STEVEN", "c": "807", "d": "4080725", "s": 20}, {"n": "MURILLO MANSILLA BRAYAN SNAYDER", "c": "807", "d": "4080726", "s": 1}, {"n": "NIAMPIRA MORENO LISMY SARAY", "c": "807", "d": "4080727", "s": 2}, {"n": "ORTIZ GARZON JUAN SEBASTIAN", "c": "807", "d": "4080728", "s": 3}, {"n": "ORTIZ SILVA DYLAN DAMIAN", "c": "807", "d": "4080729", "s": 4}, {"n": "OTAVO YATE MARIA CAMILA", "c": "807", "d": "4080730", "s": 8}, {"n": "PRADA ORJUELA ARIANA SOFIA", "c": "807", "d": "4080731", "s": 9}, {"n": "RIVERA MONGUI DANNA VALENTINA", "c": "807", "d": "4080732", "s": 10}, {"n": "ROA RODRIGUEZ CRISTIAN ANDRES", "c": "807", "d": "4080733", "s": 11}, {"n": "SANTOS RAMIREZ ARTURO", "c": "807", "d": "4080734", "s": 12}, {"n": "VARGAS MORALES KEVIN STEVEN", "c": "807", "d": "4080735", "s": 13}, {"n": "VASALLO RODRIGUEZ JESLY TATIANA", "c": "807", "d": "4080736", "s": 14}, {"n": "VILLANUEVA ARENAS ZARAY XIMENA", "c": "807", "d": "4080737", "s": 15}, {"n": "ALBARRACIN ECHEVERRY SEBASTIAN", "c": "905", "d": "4090501", "s": 16}, {"n": "ARAQUE GONZALEZ MANUEL ALEJANDRO", "c": "905", "d": "4090502", "s": 17}, {"n": "AREVALO SANCHEZ JUAN SEBASTIAN", "c": "905", "d": "4090503", "s": 18}, {"n": "BECERRA PEÑA KEVIN ESTIVEN", "c": "905", "d": "4090504", "s": 20}, {"n": "BONILLA RADA JOSE DURLEY", "c": "905", "d": "4090505", "s": 1}, {"n": "BONILLA RADA MIGUEL ANGEL", "c": "905", "d": "4090506", "s": 2}, {"n": "CANTILLO POTES SARA VALENTINA", "c": "905", "d": "4090507", "s": 3}, {"n": "CORREA MARTINEZ DAYANA MICHELLE", "c": "905", "d": "4090508", "s": 4}, {"n": "FRANCO FRANCO SHARYD YULLYED", "c": "905", "d": "4090509", "s": 8}, {"n": "GAMBA RODRIGUEZ JUAN JOSE", "c": "905", "d": "4090510", "s": 9}, {"n": "GARCIA GOMEZ LOREN RENATA", "c": "905", "d": "4090511", "s": 10}, {"n": "GONZALEZ GAITAN DILAN ANDREY", "c": "905", "d": "4090512", "s": 11}, {"n": "GUAPACHO ALAPE JHADEN YULYEDH", "c": "905", "d": "4090513", "s": 12}, {"n": "GUARECUCO ESCALONA DIEGO ALEJANDRO", "c": "905", "d": "4090514", "s": 13}, {"n": "GUZMAN GARCIA DANIEL FELIPE", "c": "905", "d": "4090515", "s": 14}, {"n": "IBAÑEZ GUERRERO JULIAN DAVID", "c": "905", "d": "4090516", "s": 15}, {"n": "MALAMBO DIAZ JOHAN ANDRES", "c": "905", "d": "4090517", "s": 16}, {"n": "MENDIETA CARO DAYAN NICOLL", "c": "905", "d": "4090518", "s": 17}, {"n": "MIJARES NAVAS DENNYSMAR GUADALUPE", "c": "905", "d": "4090519", "s": 18}, {"n": "MUNEVAR LINARES DARY SANTIAGO", "c": "905", "d": "4090520", "s": 20}, {"n": "OLAYA ZULUAGA LUISA FERNANDA", "c": "905", "d": "4090521", "s": 1}, {"n": "PACHECO MAHECHA JHOJAN STIVEN", "c": "905", "d": "4090522", "s": 2}, {"n": "PASTAR PINZON WENDY DANIELA", "c": "905", "d": "4090523", "s": 3}, {"n": "PINZON MARIN MARIA VALENTINA", "c": "905", "d": "4090524", "s": 4}, {"n": "PULIDO LADINO NICOLAS ANDRES", "c": "905", "d": "4090525", "s": 8}, {"n": "RAMIREZ JARAMILLO MANUEL", "c": "905", "d": "4090526", "s": 9}, {"n": "SALCEDO URREA MARIAN FERNANDA", "c": "905", "d": "4090527", "s": 10}, {"n": "TOLENTINO SOLANO VALERY WENDOLYNE", "c": "905", "d": "4090528", "s": 11}, {"n": "ACOSTA GARIBELLO VALERYE TATIANA", "c": "906", "d": "4090601", "s": 12}, {"n": "ADAMES VILLARRAGA LAURA VANESA", "c": "906", "d": "4090602", "s": 13}, {"n": "ARIAS GARCIA WEINER SEBASTIAN", "c": "906", "d": "4090603", "s": 14}, {"n": "ARIAS ZEA ERIKA VALENTINA", "c": "906", "d": "4090604", "s": 15}, {"n": "AYALA HERNANDEZ OSCAR STIVEN", "c": "906", "d": "4090605", "s": 16}, {"n": "BARRETO CALDERON JEAN CARLOS", "c": "906", "d": "4090606", "s": 17}, {"n": "BECERRA PENA OSCAR DANIEL", "c": "906", "d": "4090607", "s": 18}, {"n": "BEJARANO GARZON CAROL DAYANA", "c": "906", "d": "4090608", "s": 20}, {"n": "CAMARGO COGOLLO CRISTIAN ANDRES", "c": "906", "d": "4090609", "s": 1}, {"n": "CARDENAS GARCIA CRISTHOPHER JEAN PAUL", "c": "906", "d": "4090610", "s": 2}, {"n": "CASTRO OSORIO ANGEL MAURICIO", "c": "906", "d": "4090611", "s": 3}, {"n": "DIAZ RIVEROS JOSEPH SANTIAGO", "c": "906", "d": "4090612", "s": 4}, {"n": "FRANCO AVILA EIMY LORENA", "c": "906", "d": "4090613", "s": 8}, {"n": "GAMBA MORENO EMILY SOFIA", "c": "906", "d": "4090614", "s": 9}, {"n": "GARAVITO MOLINA LAURA SOFIA", "c": "906", "d": "4090615", "s": 10}, {"n": "GUZMAN CARDENAS MELANY ROUSSE", "c": "906", "d": "4090616", "s": 11}, {"n": "MARQUINA MUÑOZ ASHLEY EMPERATRIZ", "c": "906", "d": "4090617", "s": 12}, {"n": "MARTINEZ RONDEROS SARA SOFIA", "c": "906", "d": "4090618", "s": 13}, {"n": "MEDINA ZULUAGA SHAROL CAMILA", "c": "906", "d": "4090619", "s": 14}, {"n": "NARVÁEZ TIQUE MARÍA JOSÉ", "c": "906", "d": "4090620", "s": 15}, {"n": "ORTIZ VILLEGAS SEBASTIAN", "c": "906", "d": "4090621", "s": 16}, {"n": "OTAYA TRUJILLO BREIZHLANDER NICOLAS", "c": "906", "d": "4090622", "s": 17}, {"n": "PORRAS ROMERO DILAN STIVEN", "c": "906", "d": "4090623", "s": 18}, {"n": "RAMIREZ DIAZ ANGELA LUISANA", "c": "906", "d": "4090624", "s": 20}, {"n": "RODRIGUEZ FORERO LAURA DANIELA", "c": "906", "d": "4090625", "s": 1}, {"n": "RODRIGUEZ SANTAMARIA LAURA VALENTINA", "c": "906", "d": "4090626", "s": 2}, {"n": "RONCANCIO LEON NICOLAS ALEJANDRO", "c": "906", "d": "4090627", "s": 3}, {"n": "SANABRIA BECERRA DAMIAN ANDRES", "c": "906", "d": "4090628", "s": 4}, {"n": "SUAREZ MATEUS SARA YIZETH", "c": "906", "d": "4090629", "s": 8}, {"n": "TORRES NEGRETE MARIBEL", "c": "906", "d": "4090630", "s": 9}, {"n": "VANEGAS GORDILLO OSWALDO", "c": "906", "d": "4090631", "s": 10}, {"n": "AREVALO OLIVAREZ EDWIN ANDRES", "c": "907", "d": "4090701", "s": 11}, {"n": "BARRAGAN GONZALEZ JOAN SEBASTIAN", "c": "907", "d": "4090702", "s": 12}, {"n": "BONILLA RADA JUAN FRANCISCO", "c": "907", "d": "4090703", "s": 13}, {"n": "BOTERO AGUIRRE YESICA ALEJANDRA", "c": "907", "d": "4090704", "s": 14}, {"n": "CAPOTE ARIAS LESLY DAYANA", "c": "907", "d": "4090705", "s": 15}, {"n": "CHICO LOAIZA JHON ALEX", "c": "907", "d": "4090706", "s": 16}, {"n": "GALINDO CASILIMAS KEVIN ALEXIS", "c": "907", "d": "4090707", "s": 17}, {"n": "GARCIA SALGADO JUAN DIEGO", "c": "907", "d": "4090708", "s": 18}, {"n": "GIRALDO ALZATE MIGUEL ANGEL", "c": "907", "d": "4090709", "s": 20}, {"n": "GUZMAN GARCIA MICHAEL GIOVANNY", "c": "907", "d": "4090710", "s": 1}, {"n": "HERNANDEZ ALARCON ONEXIMAR LUCIA", "c": "907", "d": "4090711", "s": 2}, {"n": "LEON DONATO CHARID NATHALIA", "c": "907", "d": "4090712", "s": 3}, {"n": "LEON VARELA MIGUEL ANGEL", "c": "907", "d": "4090713", "s": 4}, {"n": "LISCANO RUIZ SARA NATHALIA", "c": "907", "d": "4090714", "s": 8}, {"n": "MANJARRES CANTILLO ALEJANDRO JOSE", "c": "907", "d": "4090715", "s": 9}, {"n": "MEDINA AGUIRRE YOANYELIMAR ALEXANDRA", "c": "907", "d": "4090716", "s": 10}, {"n": "MENA QUEJADA DIANA CAROLINA", "c": "907", "d": "4090717", "s": 11}, {"n": "PADILLA URIANA ELIANIS LICETH", "c": "907", "d": "4090718", "s": 12}, {"n": "PEÑA GONZALEZ LUIS SANTIAGO", "c": "907", "d": "4090719", "s": 13}, {"n": "RAMIREZ ALZATE SALOME", "c": "907", "d": "4090720", "s": 14}, {"n": "RAMIREZ GORDILLO JHONSSER STIVEN", "c": "907", "d": "4090721", "s": 15}, {"n": "RAMIREZ RIVERA MATIUS ANDREI", "c": "907", "d": "4090722", "s": 16}, {"n": "ROMERO NOVOA RONAL SANTIAGO", "c": "907", "d": "4090723", "s": 17}, {"n": "SALDAÑA CARDOZO DANA ALEXANDRA", "c": "907", "d": "4090724", "s": 18}, {"n": "SANCHEZ GORDILLO JUAN DIEGO", "c": "907", "d": "4090725", "s": 20}, {"n": "TOLOSA MATEUS MAICOL ESTIBEN", "c": "907", "d": "4090726", "s": 1}, {"n": "TORRES TAPARCUA DYLAN JOVANY", "c": "907", "d": "4090727", "s": 2}, {"n": "VANEGAS ANDRADE MIGUEL ANDRES", "c": "907", "d": "4090728", "s": 3}, {"n": "VARGAS PERALTA MICHEL XIOMARA", "c": "907", "d": "4090729", "s": 4}, {"n": "VARGAS SORA SANTIAGO", "c": "907", "d": "4090730", "s": 8}, {"n": "VILLARRAGA GRANADOS DANIEL FRANCHESCO", "c": "907", "d": "4090731", "s": 9}, {"n": "ZAPATA GARCIA JUAN DIEGO", "c": "907", "d": "4090732", "s": 10}, {"n": "ALBARRACIN ECHEVERRY ALISON MICHEL", "c": "1005", "d": "40100501", "s": 11}, {"n": "ALFARO GUEVARA KATERIN MILENA", "c": "1005", "d": "40100502", "s": 12}, {"n": "ARIAS CRUZ HEIDY JOHANA", "c": "1005", "d": "40100503", "s": 13}, {"n": "BARRIOS ZUÑIGA JHOIDYS LISETH", "c": "1005", "d": "40100504", "s": 14}, {"n": "BAUTISTA VALOR KEVIN DABIAN", "c": "1005", "d": "40100505", "s": 15}, {"n": "BORJA SILVA DAYAN", "c": "1005", "d": "40100506", "s": 16}, {"n": "CARDENAS MARTINEZ JOEL JAVIER", "c": "1005", "d": "40100507", "s": 17}, {"n": "CARDONA PINEDA SERGIO IVAN", "c": "1005", "d": "40100508", "s": 18}, {"n": "CORTES GUEVARA DAVID ESTIBEN", "c": "1005", "d": "40100509", "s": 20}, {"n": "CORTES MARIN JUAN DAVID", "c": "1005", "d": "40100510", "s": 1}, {"n": "CUEVAS HERRERA NICOL XIOMARA", "c": "1005", "d": "40100511", "s": 2}, {"n": "GALINDO CASILIMAS IVAN SANTIAGO", "c": "1005", "d": "40100512", "s": 3}, {"n": "GARCIA OLIVEROS KEINER JULIAN", "c": "1005", "d": "40100513", "s": 4}, {"n": "GARZON JARAMILLO LAURA VALENTINA", "c": "1005", "d": "40100514", "s": 8}, {"n": "GIRALDO CASTAÑEDA JUAN PABLO", "c": "1005", "d": "40100515", "s": 9}, {"n": "GOMEZ MATEUS SHARON DAYAN", "c": "1005", "d": "40100516", "s": 10}, {"n": "GONGORA PADILLA YEISON STEVEN", "c": "1005", "d": "40100517", "s": 11}, {"n": "HENAO BARRERA BRAYAN RICARDO", "c": "1005", "d": "40100518", "s": 12}, {"n": "LARA CIFUENTES VALERY XIMENA", "c": "1005", "d": "40100519", "s": 13}, {"n": "LEON RAMIREZ SAMUEL FELIPE", "c": "1005", "d": "40100520", "s": 14}, {"n": "MARTINEZ AGREDO ANDRES CAMILO", "c": "1005", "d": "40100521", "s": 15}, {"n": "ORTEGA CHAVARRO BRANDON STIVEN", "c": "1005", "d": "40100522", "s": 16}, {"n": "PAVA SASTOQUE JEYLER SEBASTIAN", "c": "1005", "d": "40100523", "s": 17}, {"n": "PEÑA LOPEZ JHOJAN SMITH", "c": "1005", "d": "40100524", "s": 18}, {"n": "PINEDA CORREDOR LINA MARIA", "c": "1005", "d": "40100525", "s": 20}, {"n": "PINTO MEDINA DANIELIS ISABEL", "c": "1005", "d": "40100526", "s": 1}, {"n": "PIÑEROS MORERA CAROL XIMENA", "c": "1005", "d": "40100527", "s": 2}, {"n": "PORTELA MARTINEZ JAIVER YECID", "c": "1005", "d": "40100528", "s": 3}, {"n": "RIVERA GAONA LAURA VALENTINA", "c": "1005", "d": "40100529", "s": 4}, {"n": "RODRIGUEZ MORENO LOUREN JAZMIN", "c": "1005", "d": "40100530", "s": 8}, {"n": "RODRIGUEZ OBANDO NICOLAS DAVID", "c": "1005", "d": "40100531", "s": 9}, {"n": "RODRIGUEZ ROMERO MARTIN ALEJANDRO", "c": "1005", "d": "40100532", "s": 10}, {"n": "RODRIGUEZ SAAVEDRA EMANUEL DAVID", "c": "1005", "d": "40100533", "s": 11}, {"n": "ROJAS MOLINA JUAN FELIPE", "c": "1005", "d": "40100534", "s": 12}, {"n": "SALDAÑA CARO SARA NAYARITH", "c": "1005", "d": "40100535", "s": 13}, {"n": "SIMBAQUEVA PINZON EDDY SEBASTIAN", "c": "1005", "d": "40100536", "s": 14}, {"n": "SORA CARVAJAL NICOL MELISSA", "c": "1005", "d": "40100537", "s": 15}, {"n": "TORRES NEGRETE LINA MARIA", "c": "1005", "d": "40100538", "s": 16}, {"n": "TRUJILLO MALDONADO MAURICIO FELIPE", "c": "1005", "d": "40100539", "s": 17}, {"n": "ZABALA TRIANA EDDY JOAN", "c": "1005", "d": "40100540", "s": 18}, {"n": "ACOSTA MAZO CAMILA ALEJANDRA", "c": "1006", "d": "40100601", "s": 20}, {"n": "ACOSTA MAZO EDDY SANTIAGO", "c": "1006", "d": "40100602", "s": 1}, {"n": "ARIAS GARCIA JIREH HASBLEIDY", "c": "1006", "d": "40100603", "s": 2}, {"n": "AVILA SIERRA JOHAN CAMILO", "c": "1006", "d": "40100604", "s": 3}, {"n": "BARRIOS GIL DANIEL SANTIAGO", "c": "1006", "d": "40100605", "s": 4}, {"n": "BENAVIDES ECHEVERRI JOHAN SEBASTIAN", "c": "1006", "d": "40100606", "s": 8}, {"n": "BLANCO MARTA MIGUEL ANGEL", "c": "1006", "d": "40100607", "s": 9}, {"n": "CANTOR MONCADA JORGE ANDRES", "c": "1006", "d": "40100608", "s": 10}, {"n": "CUBIDES PEÑALOZA SARA MICHEL", "c": "1006", "d": "40100609", "s": 11}, {"n": "CUELLAR LLANOS MIGUEL ANGEL", "c": "1006", "d": "40100610", "s": 12}, {"n": "CUESTA AGREDO SEBASTIAN CAMILO", "c": "1006", "d": "40100611", "s": 13}, {"n": "CUEVAS HERNANDEZ JUBER ALEXANDER", "c": "1006", "d": "40100612", "s": 14}, {"n": "FLORES GONZALEZ ANETH LUCIA", "c": "1006", "d": "40100613", "s": 15}, {"n": "GARCIA HERNANDEZ HADDY VALENTINA", "c": "1006", "d": "40100614", "s": 16}, {"n": "GOMEZ MONTILLA MARIA ISABEL", "c": "1006", "d": "40100615", "s": 17}, {"n": "GONZALEZ LOZANO MICHELL DAYANA", "c": "1006", "d": "40100616", "s": 18}, {"n": "GUTIERREZ RICO FRANCISCO ALI", "c": "1006", "d": "40100617", "s": 20}, {"n": "HERNANDEZ CARO NICOL DAYAN", "c": "1006", "d": "40100618", "s": 1}, {"n": "HERRERA AREVALO DILAN DAVID", "c": "1006", "d": "40100619", "s": 2}, {"n": "IRUA TOLOZA YERMAN ANDRES", "c": "1006", "d": "40100620", "s": 3}, {"n": "LOPEZ HERNANDEZ VALERY JULIETH", "c": "1006", "d": "40100621", "s": 4}, {"n": "LOZANO OSPINA VALERIE DANIELA", "c": "1006", "d": "40100622", "s": 8}, {"n": "MARIN MARIN DAYARITH DE LOS ANGELES", "c": "1006", "d": "40100623", "s": 9}, {"n": "MARTINEZ GIL CRISTIAN DANIEL", "c": "1006", "d": "40100624", "s": 10}, {"n": "MATALLANA BARRETO VANESSA ALEJANDRA", "c": "1006", "d": "40100625", "s": 11}, {"n": "MORA CIFUENTES JHONATAN DAVID", "c": "1006", "d": "40100626", "s": 12}, {"n": "PARADA MARTINEZ LUNA SOFIA", "c": "1006", "d": "40100627", "s": 13}, {"n": "PARDO CAICEDO JUAN FELIPE", "c": "1006", "d": "40100628", "s": 14}, {"n": "PEREZ MUÑOZ NICOLL", "c": "1006", "d": "40100629", "s": 15}, {"n": "PINZON BELTRAN VALERY ALEXANDRA", "c": "1006", "d": "40100630", "s": 16}, {"n": "PLATA CIFUENTES NICOL SOFIA", "c": "1006", "d": "40100631", "s": 17}, {"n": "RAMOS HERNANDEZ JONNY FERNANDO", "c": "1006", "d": "40100632", "s": 18}, {"n": "RODRIGUEZ VALDERRAMA MARLON DAVID", "c": "1006", "d": "40100633", "s": 20}, {"n": "SAAVEDRA PAREDES CRISTIAN JOSE", "c": "1006", "d": "40100634", "s": 1}, {"n": "SILVA LARA SERGIO ANDRES", "c": "1006", "d": "40100635", "s": 2}, {"n": "TRUJILLO FIGUEROA EILEEN SOFIA", "c": "1006", "d": "40100636", "s": 3}, {"n": "VARGAS ARCINIEGAS JANIER STIVEN", "c": "1006", "d": "40100637", "s": 4}, {"n": "YATE HURTADO DANNA SOFIA", "c": "1006", "d": "40100638", "s": 8}, {"n": "AGUDELO ARBOLEDA VANESA", "c": "1105", "d": "40110501", "s": 9}, {"n": "ALBUJA SANCHEZ JUAN DAVID", "c": "1105", "d": "40110502", "s": 10}, {"n": "AMADOR RODRIGUEZ SARA", "c": "1105", "d": "40110503", "s": 11}, {"n": "BOSSA BUSTOS JUAN DAVID", "c": "1105", "d": "40110504", "s": 12}, {"n": "CAMARGO COGOLLO SARA YANETH", "c": "1105", "d": "40110505", "s": 13}, {"n": "CANDIA PEÑALOZA DAVID SANTIAGO", "c": "1105", "d": "40110506", "s": 14}, {"n": "CAÑON AGUILERA LUISA FERNANDA", "c": "1105", "d": "40110507", "s": 15}, {"n": "CORTES RUBIO FRANCISCO ORLANDO", "c": "1105", "d": "40110508", "s": 16}, {"n": "CUBIDES PEÑALOZA JHONATAN STIVEN", "c": "1105", "d": "40110509", "s": 17}, {"n": "GONZALEZ GARCES RAUL SANTIAGO", "c": "1105", "d": "40110510", "s": 18}, {"n": "GONZALEZ OLAYA SANTIAGO ANDRES", "c": "1105", "d": "40110511", "s": 20}, {"n": "GORDILLO MARULANDA LISETH MARIANA", "c": "1105", "d": "40110512", "s": 1}, {"n": "HERRAN ROJAS DIEGO", "c": "1105", "d": "40110513", "s": 2}, {"n": "MAYORGA QUICENO NASLY SOFIA", "c": "1105", "d": "40110514", "s": 3}, {"n": "MENDEZ CLAVIJO BRAYAN JULIAN", "c": "1105", "d": "40110515", "s": 4}, {"n": "MENDEZ PARRA ANDRES FELIPE", "c": "1105", "d": "40110516", "s": 8}, {"n": "MILLAN SALAS JERVIC MANUEL", "c": "1105", "d": "40110517", "s": 9}, {"n": "MILLAN SANABRIA LAURA JIMENA", "c": "1105", "d": "40110518", "s": 10}, {"n": "MUÑOZ VIRGUEZ HERNAN SANTIAGO", "c": "1105", "d": "40110519", "s": 11}, {"n": "MUÑOZ YEPEZ MARIAN SOFIA", "c": "1105", "d": "40110520", "s": 12}, {"n": "OCAMPO CUMACO NICOLL DAYANA", "c": "1105", "d": "40110521", "s": 13}, {"n": "ORTIZ GOMEZ KEVIN JULIAN", "c": "1105", "d": "40110522", "s": 14}, {"n": "ORTIZ TORRES ALISSON ALEJANDRA", "c": "1105", "d": "40110523", "s": 15}, {"n": "OTAVO YATE MARIA ALEJANDRA", "c": "1105", "d": "40110524", "s": 16}, {"n": "PALACIO IBARGUEN YEIMAR", "c": "1105", "d": "40110525", "s": 17}, {"n": "PALACIOS SANCHEZ WANDA AYELEN", "c": "1105", "d": "40110526", "s": 18}, {"n": "PARRA MONGUI JHON ALEJANDRO", "c": "1105", "d": "40110527", "s": 20}, {"n": "PRADA PAVA ALISON NICOL", "c": "1105", "d": "40110528", "s": 1}, {"n": "QUINTERO GUERRERO NICOLAS", "c": "1105", "d": "40110529", "s": 2}, {"n": "RAMIREZ PULIDO JUAN DAVID", "c": "1105", "d": "40110530", "s": 3}, {"n": "SAENZ GALVIS GABRIEL FELIPE", "c": "1105", "d": "40110531", "s": 4}, {"n": "SIERRA ROJAS SARA NICOLE", "c": "1105", "d": "40110532", "s": 8}, {"n": "TORRES CABRERA JHOAN ESTIVEN", "c": "1105", "d": "40110533", "s": 9}, {"n": "TORRES IBARGUEN ESTEFANI LIZETH", "c": "1105", "d": "40110534", "s": 10}, {"n": "TRUJILLO MALDONADO JOSE ALEJANDRO", "c": "1105", "d": "40110535", "s": 11}, {"n": "VARGAS CORONADO DYLAN", "c": "1105", "d": "40110536", "s": 12}, {"n": "AGUILERA PALENCIA FABIAN ESTEBAN", "c": "1106", "d": "40110601", "s": 13}, {"n": "ALBA OLIVERA LUNA SOFIA", "c": "1106", "d": "40110602", "s": 14}, {"n": "ARENAS COBOS MARIA CAMILA", "c": "1106", "d": "40110603", "s": 15}, {"n": "BARRAGAN PEÑA LEYMER DAMIAN", "c": "1106", "d": "40110604", "s": 16}, {"n": "BUSTAMANTE DUARTE VALERY YULIETH", "c": "1106", "d": "40110605", "s": 17}, {"n": "BUSTOS REYES JHON ALEX", "c": "1106", "d": "40110606", "s": 18}, {"n": "CAMARGO BARRERO ISABELLA", "c": "1106", "d": "40110607", "s": 20}, {"n": "CARDENAS LIZCANO DANIEL FELIPE", "c": "1106", "d": "40110608", "s": 1}, {"n": "CARDONA TOVAR TATIANA", "c": "1106", "d": "40110609", "s": 2}, {"n": "GARZON SOLAQUE IANN ESTEBAN", "c": "1106", "d": "40110610", "s": 3}, {"n": "GONZALEZ CASTRO SEBASTIAN ANDRES", "c": "1106", "d": "40110611", "s": 4}, {"n": "GUARAMATA LAREZ EUMARYS JOSE", "c": "1106", "d": "40110612", "s": 8}, {"n": "HERNANDEZ ALARCON ORIANNIS LUZMILA", "c": "1106", "d": "40110613", "s": 9}, {"n": "LINARES RAMIREZ EVELYN MARIANA", "c": "1106", "d": "40110614", "s": 10}, {"n": "MAHECHA LANCHEROS YASHIN RUGGERI", "c": "1106", "d": "40110615", "s": 11}, {"n": "MALDONADO MONTAÑEZ YEISSON DAVID", "c": "1106", "d": "40110616", "s": 12}, {"n": "MARIN SANTAMARIA ANGIE VALENTINA", "c": "1106", "d": "40110617", "s": 13}, {"n": "MASMELA MENDOZA TANIA VALENTINA", "c": "1106", "d": "40110618", "s": 14}, {"n": "MURILLO MANSILLA DARIANYALY", "c": "1106", "d": "40110619", "s": 15}, {"n": "ORJUELA RAMIREZ SARA VALENTINA", "c": "1106", "d": "40110620", "s": 16}, {"n": "OSPINA NIAMPIRA ANNY DAYANA", "c": "1106", "d": "40110621", "s": 17}, {"n": "PEÑA DIAZ WILMER RONAIKER", "c": "1106", "d": "40110622", "s": 18}, {"n": "PEÑUELA LUGO SHAROL DAYANA", "c": "1106", "d": "40110623", "s": 20}, {"n": "RAMOS LEON KAREN JULIANA", "c": "1106", "d": "40110624", "s": 1}, {"n": "RIOS PINEDA NICOLAS JAVIER", "c": "1106", "d": "40110625", "s": 2}, {"n": "RUIZ JIMENEZ TANIA ALEJANDRA", "c": "1106", "d": "40110626", "s": 3}, {"n": "SALAZAR MARTINEZ CARMEN YULIANA", "c": "1106", "d": "40110627", "s": 4}, {"n": "SANCHEZ ARDILA BRIYITH ALEXANDRA", "c": "1106", "d": "40110628", "s": 8}, {"n": "SANDOVAL GOMEZ LAURA ESTEFANY", "c": "1106", "d": "40110629", "s": 9}, {"n": "SILVA SOTO DIEGO MAURICIO", "c": "1106", "d": "40110630", "s": 10}, {"n": "SUAREZ PALOMINO JENCY VANESA", "c": "1106", "d": "40110631", "s": 11}, {"n": "TORRES TAPARCUA KAHORY MAYELETH", "c": "1106", "d": "40110632", "s": 12}, {"n": "ZULUAGA ROJAS YEIMY VALENTINA", "c": "1106", "d": "40110633", "s": 13}];
+        const cursosList = [...new Set(estudiantes.map(e => e.c))].sort();
+
+        // Población de selectores
+        const sSalon = document.getElementById('select-salon');
+        const sCurso = document.getElementById('select-curso');
+        
+        const salonesValidos = [1,2,3,4,8,9,10,11,12,13,14,15,16,17,18,20];
+        salonesValidos.forEach(i => {
+            let opt = document.createElement('option');
+            opt.value = i; opt.innerHTML = 'SALÓN ' + i;
+            sSalon.appendChild(opt);
+        });
+        
+        cursosList.forEach(c => {
+            let opt = document.createElement('option');
+            opt.value = c; opt.innerHTML = 'CURSO ' + c;
+            sCurso.appendChild(opt);
+        });
+
+        // === PANEL DE REGLAS (fuente única, inyectada en Salones y en Horario) ===
+        const reglasHTML = `
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border-t-4 border-amber-500">
+                <div class="w-full bg-amber-500 p-3 text-white font-bold text-center uppercase tracking-widest text-xs">
+                    Reglas para el Docente
+                </div>
+                <div class="p-5 space-y-4 text-xs text-gray-700 leading-relaxed">
+                    <div>
+                        <h4 class="font-black text-azul-rey uppercase text-[11px] mb-2">Estructura del Acompañamiento</h4>
+                        <ul class="list-disc pl-4 space-y-1.5">
+                            <li>Recuerden: los estudiantes de inclusión que necesiten acompañamiento activo de un docente <b>no presentan las pruebas el miércoles</b>. Directores de curso: avisen a los acudientes que estas pruebas se realizarán en el horario de clase habitual, con cada docente titular de la asignatura. Esto se debe a que no contamos con docente de apoyo, y no es posible garantizar ese acompañamiento en coordinación durante toda la jornada.</li>
+                            <li>De 6:00am a 7:00am los estudiantes estarán en su salón de dirección de curso, con su director de curso. En este espacio de 6:00am a 7:00am, cada director de curso socializa el código para su diligenciamiento y la asignación de salón de presentación.</li>
+                            <li>De 6:00am a 7:00am, los docentes <b>Dilsa Sandoval, Edgar Muñoz, Margarita Varela y Rodrigo Guerrero</b> estarán en coordinación organizando los paquetes de las pruebas por salón de presentación.</li>
+                            <li><b>Hermes Almanza</b>, al ser docente de horas extra, no tiene asignación de <b>6:00am a 8:00am</b> — se le solicita estar en San Nicolás unos minutos antes de las 8:00am.</li>
+                            <li>Se organizaron 5 horas de clase para el acompañamiento de la prueba. Es obligatorio permanecer en el salón asignado durante todo el bloque o bloques asignados — no dejar estudiantes solos en ningún momento.</li>
+                            <li>Si el relevo no llega oportunamente al cambio de bloque, avisar a coordinación para verificar.</li>
+                            <li>Es un solo descanso, el grupo de acompañamiento completo estará con ellos en el patio.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-azul-rey uppercase text-[11px] mb-2">Antes de Iniciar</h4>
+                        <ul class="list-disc pl-4 space-y-1.5">
+                            <li>Si hay un estudiante sin código asignado, informar a coordinación — allí se le asignará uno.</li>
+                            <li>No contamos con docentes de apoyo en esta jornada: cualquier novedad se informa directamente a coordinación.</li>
+                            <li>Ir a coordinación a recoger el paquete de pruebas correspondiente al salón asignado.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-azul-rey uppercase text-[11px] mb-2">Durante la Prueba</h4>
+                        <ul class="list-disc pl-4 space-y-1.5">
+                            <li>Recuerden: si un estudiante está reprobando la asignatura, una prueba trimestral con nota superior a 4.0 hace que, según el SIE, la nota definitiva de la asignatura sea 3.0. Por este beneficio, muchos estudiantes van a intentar hacer trampa — no seamos pasivos ante esa posibilidad. Si requieren apoyo, solicítenlo a coordinación.</li>
+                            <li>Queda prohibida la manipulación de dispositivos electrónicos (celular, smartwatch, audífonos, tablet, etc.), incluso si el estudiante ya terminó la prueba.</li>
+                            <li>En las asignaturas que requieran cálculos, y únicamente si el docente titular lo autoriza, los estudiantes solo pueden usar calculadora básica, no celular.</li>
+                            <li>Si un estudiante termina antes, debe permanecer en silencio en su puesto hasta el cierre del bloque — no se deja salir estudiantes al patio.</li>
+                            <li>El código se escribe de izquierda a derecha. Usar únicamente lápiz.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-azul-rey uppercase text-[11px] mb-2">Cierre de la Jornada (Último Bloque)</h4>
+                        <ul class="list-disc pl-4 space-y-1.5">
+                            <li>Clasificar las hojas de respuesta por curso, en orden alfabético, y dejarlas en el lugar destinado para tal fin en la sala de profesores.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>`;
+        document.getElementById('reglas-panel-salones').innerHTML = reglasHTML;
+        document.getElementById('reglas-panel-horario').innerHTML = reglasHTML;
+
+        function setPerfil(p) {
+            document.getElementById('seccion-estudiante').classList.toggle('hidden', p !== 'estudiante');
+            document.getElementById('seccion-docente').classList.toggle('hidden', p !== 'docente');
+            document.getElementById('seccion-horario').classList.toggle('hidden', p !== 'horario');
+
+            const activo = "flex-1 py-4 rounded-xl font-bold border-2 border-azul-rey bg-azul-rey text-white shadow-lg text-xs";
+            const inactivo = "flex-1 py-4 rounded-xl font-bold border-2 border-azul-rey text-azul-rey bg-white shadow-lg text-xs";
+            document.getElementById('btn-est').className = p === 'estudiante' ? activo : inactivo;
+            document.getElementById('btn-doc').className = p === 'docente' ? activo : inactivo;
+            document.getElementById('btn-hor').className = p === 'horario' ? activo : inactivo;
+        }
+
+        function buscarEstudiante() {
+            const term = document.getElementById('input-busqueda').value.toLowerCase();
+            const resDiv = document.getElementById('resultado-busqueda');
+            resDiv.innerHTML = '';
+            if(term.length < 3) return;
+
+            const filtrados = estudiantes.filter(e => e.n.toLowerCase().includes(term) || e.c.includes(term));
+            
+            filtrados.slice(0, 8).forEach(e => {
+                resDiv.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl shadow-lg border-l-8 border-azul-rey">
+                        <div class="flex justify-between items-start mb-1">
+                             <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">CURSO ${e.c}</p>
+                             <p class="text-[10px] text-gray-300 font-mono">${e.d}</p>
+                        </div>
+                        <h2 class="text-md font-black text-gray-800 uppercase leading-tight">${e.n}</h2>
+                        <div class="flex items-center justify-between mt-4 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                            <span class="text-[10px] font-bold text-azul-rey uppercase">Tu Salón es:</span>
+                            <span class="text-3xl font-black text-azul-rey">${e.s}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filtrarPorSalon() {
+            sCurso.value = "";
+            const s = document.getElementById('select-salon').value;
+            if(!s) return document.getElementById('area-docente-resultados').classList.add('hidden');
+            
+            renderDocente(estudiantes.filter(e => e.s == s), 'SALÓN ' + s, true);
+        }
+
+        function filtrarPorCurso() {
+            sSalon.value = "";
+            const c = sCurso.value;
+            if(!c) return document.getElementById('area-docente-resultados').classList.add('hidden');
+            
+            renderDocente(estudiantes.filter(e => e.c == c), 'CURSO ' + c, false);
+        }
+
+        function renderDocente(data, titulo, conConsolidado) {
+            const area = document.getElementById('area-docente-resultados');
+            const body = document.getElementById('body-tabla');
+            const consDiv = document.getElementById('consolidado-grado');
+            const tituloT = document.getElementById('titulo-tabla');
+            
+            area.classList.remove('hidden');
+            tituloT.innerHTML = titulo;
+            body.innerHTML = '';
+            
+            data.forEach(e => {
+                body.innerHTML += `
+                    <tr>
+                        <td class="p-3">
+                            <div class="font-bold uppercase text-[11px]">${e.n}</div>
+                            ${!conConsolidado ? '<div class="text-[9px] text-gray-400 uppercase">Salón: '+e.s+'</div>' : '<div class="text-[9px] text-gray-400 uppercase">Curso: '+e.c+'</div>'}
+                        </td>
+                        <td class="p-3 text-right">
+                            <div class="font-mono text-gray-500 text-[10px]">${e.d}</div>
+                            ${conConsolidado ? '<div class="font-black text-azul-rey text-lg">S-'+e.s+'</div>' : '<div class="font-black text-blue-600 text-lg">S-'+e.s+'</div>'}
+                        </td>
+                    </tr>`;
+            });
+
+            if(conConsolidado) {
+                consDiv.classList.remove('hidden');
+                const counts = {};
+                data.forEach(e => {
+                    const grado = e.c.substring(0, e.c.length === 3 ? 1 : 2);
+                    const nivel = grado == "6" ? "SEXTO" : grado == "7" ? "SÉPTIMO" : grado == "8" ? "OCTAVO" : grado == "9" ? "NOVENO" : grado == "10" ? "DÉCIMO" : "ONCE";
+                    counts[nivel] = (counts[nivel] || 0) + 1;
+                });
+                const consL = document.getElementById('lista-consolidado');
+                consL.innerHTML = '';
+                Object.entries(counts).forEach(([g, c]) => {
+                    consL.innerHTML += `<div class="flex justify-between p-2 bg-gray-50 rounded-lg border text-xs"><b>${g}</b> <span>${c} pruebas</span></div>`;
+                });
+                consL.innerHTML += `<div class="pt-2 text-right font-black text-azul-rey text-sm">TOTAL: ${data.length}</div>`;
+            } else {
+                consDiv.classList.add('hidden');
+            }
+        }
+
+        // =====================================================================
+        // HORARIO DOCENTE — estructura lista, pendiente de cargar la programación
+        // Reemplazar este arreglo vacío por los datos reales cuando el horario
+        // esté terminado. Cada registro: {doc: nombre docente, dia, hora,
+        // c: curso, materia, aula}. "dia" en texto (Lunes..Viernes) y "hora"
+        // como H1..H6 para que coincida con la franja horaria de la jornada.
+        // =====================================================================
+        const horarioPruebas = [
+            {"doc": "Carlos Alcalá", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "1", "curso": "606"},
+            {"doc": "Luis Carlos Gómez", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "2", "curso": "1005"},
+            {"doc": "Alejandro Pérez", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "3", "curso": "605"},
+            {"doc": "Leonardo Delgadillo", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "4", "curso": "807"},
+            {"doc": "Brandon Ortiz", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "7", "curso": "707"},
+            {"doc": "Olga Rodríguez", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "8", "curso": "905"},
+            {"doc": "Janneth Mancipe", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "9", "curso": "906"},
+            {"doc": "Clara Cárdenas", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "10", "curso": "705"},
+            {"doc": "Johan Suárez", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "11", "curso": "806"},
+            {"doc": "Nelson Amortegui", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "12", "curso": "1006"},
+            {"doc": "Jorge Sanabria", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "13", "curso": "706"},
+            {"doc": "Fabio Vásquez", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "14", "curso": "1105"},
+            {"doc": "Johana Ricaurte", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "15", "curso": "607"},
+            {"doc": "Sebastián Guayara", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "16", "curso": "608"},
+            {"doc": "Martha Casas", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "17", "curso": "907"},
+            {"doc": "Carlos Molina", "hora": "6:00 a 7:00", "tipo": "sin_asignacion", "salon": "", "curso": ""},
+            {"doc": "Wilson Salazar", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "20", "curso": "1106"},
+            {"doc": "Dilsa Sandoval", "hora": "6:00 a 7:00", "tipo": "coordinacion", "salon": "", "curso": ""},
+            {"doc": "Edgar Muñoz", "hora": "6:00 a 7:00", "tipo": "coordinacion", "salon": "", "curso": ""},
+            {"doc": "Margarita Varela", "hora": "6:00 a 7:00", "tipo": "coordinacion", "salon": "", "curso": ""},
+            {"doc": "Rodrigo Guerrero", "hora": "6:00 a 7:00", "tipo": "coordinacion", "salon": "", "curso": ""},
+            {"doc": "Carlos Alcalá", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "1", "curso": ""},
+            {"doc": "Luis Carlos Gómez", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "2", "curso": ""},
+            {"doc": "Rodrigo Guerrero", "hora": "7:00 a 8:00", "tipo": "sobrantes", "salon": "", "curso": ""},
+            {"doc": "Leonardo Delgadillo", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "4", "curso": ""},
+            {"doc": "Olga Rodríguez", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "8", "curso": ""},
+            {"doc": "Janneth Mancipe", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "9", "curso": ""},
+            {"doc": "Clara Cárdenas", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "10", "curso": ""},
+            {"doc": "Johan Suárez", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "11", "curso": ""},
+            {"doc": "Nelson Amortegui", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "12", "curso": ""},
+            {"doc": "Jorge Sanabria", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "13", "curso": ""},
+            {"doc": "Fabio Vásquez", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "14", "curso": ""},
+            {"doc": "Johana Ricaurte", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "15", "curso": ""},
+            {"doc": "Sebastián Guayara", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "16", "curso": ""},
+            {"doc": "Dilsa Sandoval", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "17", "curso": ""},
+            {"doc": "Carlos Molina", "hora": "7:00 a 8:00", "tipo": "sin_asignacion", "salon": "", "curso": ""},
+            {"doc": "Wilson Salazar", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "20", "curso": ""},
+            {"doc": "Alejandro Pérez", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "3", "curso": ""},
+            {"doc": "Brandon Ortiz", "hora": "7:00 a 8:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Edgar Muñoz", "hora": "7:00 a 8:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Margarita Varela", "hora": "7:00 a 8:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Martha Casas", "hora": "7:00 a 8:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Rodrigo Guerrero", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "1", "curso": ""},
+            {"doc": "Luis Carlos Gómez", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "2", "curso": ""},
+            {"doc": "Margarita Varela", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "3", "curso": ""},
+            {"doc": "Leonardo Delgadillo", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "4", "curso": ""},
+            {"doc": "Hermes Almanza", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "8", "curso": ""},
+            {"doc": "Dilsa Sandoval", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "9", "curso": ""},
+            {"doc": "Edgar Muñoz", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "10", "curso": ""},
+            {"doc": "Johan Suárez", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "11", "curso": ""},
+            {"doc": "Nelson Amortegui", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "12", "curso": ""},
+            {"doc": "Jorge Sanabria", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "13", "curso": ""},
+            {"doc": "Fabio Vásquez", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "14", "curso": ""},
+            {"doc": "Olga Rodríguez", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "15", "curso": ""},
+            {"doc": "Jimmy Castro", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "16", "curso": ""},
+            {"doc": "Martha Casas", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "17", "curso": ""},
+            {"doc": "Carlos Molina", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "18", "curso": ""},
+            {"doc": "Wilson Salazar", "hora": "8:00 a 9:15", "tipo": "acompanamiento", "salon": "20", "curso": ""},
+            {"doc": "Alejandro Pérez", "hora": "8:00 a 9:15", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Brandon Ortiz", "hora": "8:00 a 9:15", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Carlos Alcalá", "hora": "8:00 a 9:15", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Clara Cárdenas", "hora": "8:00 a 9:15", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Janneth Mancipe", "hora": "8:00 a 9:15", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Johana Ricaurte", "hora": "8:00 a 9:15", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Sebastián Guayara", "hora": "8:00 a 9:15", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Carlos Alcalá", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "1", "curso": ""},
+            {"doc": "Brandon Ortiz", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "2", "curso": ""},
+            {"doc": "Alejandro Pérez", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "3", "curso": ""},
+            {"doc": "Margarita Varela", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "4", "curso": ""},
+            {"doc": "Rodrigo Guerrero", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "8", "curso": ""},
+            {"doc": "Janneth Mancipe", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "9", "curso": ""},
+            {"doc": "Clara Cárdenas", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "10", "curso": ""},
+            {"doc": "Hermes Almanza", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "11", "curso": ""},
+            {"doc": "Jimmy Castro", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "12", "curso": ""},
+            {"doc": "Jorge Sanabria", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "13", "curso": ""},
+            {"doc": "Dilsa Sandoval", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "14", "curso": ""},
+            {"doc": "Johana Ricaurte", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "15", "curso": ""},
+            {"doc": "Sebastián Guayara", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "16", "curso": ""},
+            {"doc": "Martha Casas", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "17", "curso": ""},
+            {"doc": "Edgar Muñoz", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "18", "curso": ""},
+            {"doc": "Wilson Salazar", "hora": "9:45 a 11:00", "tipo": "acompanamiento", "salon": "20", "curso": ""},
+            {"doc": "Fabio Vásquez", "hora": "9:45 a 11:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Johan Suárez", "hora": "9:45 a 11:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Leonardo Delgadillo", "hora": "9:45 a 11:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Nelson Amortegui", "hora": "9:45 a 11:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Olga Rodríguez", "hora": "9:45 a 11:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Rodrigo Guerrero", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "1", "curso": ""},
+            {"doc": "Brandon Ortiz", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "2", "curso": ""},
+            {"doc": "Alejandro Pérez", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "3", "curso": ""},
+            {"doc": "Leonardo Delgadillo", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "4", "curso": ""},
+            {"doc": "Hermes Almanza", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "8", "curso": ""},
+            {"doc": "Janneth Mancipe", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "9", "curso": ""},
+            {"doc": "Clara Cárdenas", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "10", "curso": ""},
+            {"doc": "Johan Suárez", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "11", "curso": ""},
+            {"doc": "Nelson Amortegui", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "12", "curso": ""},
+            {"doc": "Jimmy Castro", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "13", "curso": ""},
+            {"doc": "Fabio Vásquez", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "14", "curso": ""},
+            {"doc": "Dilsa Sandoval", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "15", "curso": ""},
+            {"doc": "Sebastián Guayara", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "16", "curso": ""},
+            {"doc": "Martha Casas", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "17", "curso": ""},
+            {"doc": "Edgar Muñoz", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "18", "curso": ""},
+            {"doc": "Margarita Varela", "hora": "11:00 a 12:00", "tipo": "acompanamiento", "salon": "20", "curso": ""},
+            {"doc": "Carlos Alcalá", "hora": "11:00 a 12:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Johana Ricaurte", "hora": "11:00 a 12:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Jorge Sanabria", "hora": "11:00 a 12:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Olga Rodríguez", "hora": "11:00 a 12:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Wilson Salazar", "hora": "11:00 a 12:00", "tipo": "reemplazo", "salon": "", "curso": ""},
+            {"doc": "Hermes Almanza", "hora": "6:00 a 8:00", "tipo": "sin_asignacion", "salon": "", "curso": ""},
+            {"doc": "Alejandro Pérez", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Brandon Ortiz", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Carlos Alcalá", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Carlos Molina", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Clara Cárdenas", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Dilsa Sandoval", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Edgar Muñoz", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Fabio Vásquez", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Hermes Almanza", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Janneth Mancipe", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Jimmy Castro", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Johan Suárez", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Johana Ricaurte", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Jorge Sanabria", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Leonardo Delgadillo", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Luis Carlos Gómez", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Margarita Varela", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Martha Casas", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Nelson Amortegui", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Olga Rodríguez", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Rodrigo Guerrero", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Sebastián Guayara", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Wilson Salazar", "hora": "9:15 a 9:45", "tipo": "descanso", "salon": "", "curso": ""},
+            {"doc": "Jimmy Castro", "hora": "6:00 a 7:00", "tipo": "direccion", "salon": "18", "curso": "805"},
+            {"doc": "Jimmy Castro", "hora": "7:00 a 8:00", "tipo": "acompanamiento", "salon": "18", "curso": ""}
+        ];
+
+        const tablaGeneralPruebas = [
+            {"hora": "6:00 a 7:00", "salones": {"1": "Carlos Alcalá", "2": "Luis Carlos Gómez", "3": "Alejandro Pérez", "4": "Leonardo Delgadillo", "5": "No disponible", "6": "No disponible", "7": "Brandon Ortiz", "8": "Olga Rodríguez", "9": "Janneth Mancipe", "10": "Clara Cárdenas", "11": "Johan Suárez", "12": "Nelson Amortegui", "13": "Jorge Sanabria", "14": "Fabio Vásquez", "15": "Johana Ricaurte", "16": "Sebastián Guayara", "17": "Martha Casas", "18": "Jimmy Castro", "19": "No disponible", "20": "Wilson Salazar"}, "libres": ["Dilsa Sandoval", "Edgar Muñoz", "Margarita Varela", "Rodrigo Guerrero"]},
+            {"hora": "7:00 a 8:00", "salones": {"1": "Carlos Alcalá", "2": "Luis Carlos Gómez", "3": "Alejandro Pérez", "4": "Leonardo Delgadillo", "5": "No disponible", "6": "No disponible", "7": "No disponible", "8": "Olga Rodríguez", "9": "Janneth Mancipe", "10": "Clara Cárdenas", "11": "Johan Suárez", "12": "Nelson Amortegui", "13": "Jorge Sanabria", "14": "Fabio Vásquez", "15": "Johana Ricaurte", "16": "Sebastián Guayara", "17": "Dilsa Sandoval", "18": "Jimmy Castro", "19": "No disponible", "20": "Wilson Salazar"}, "libres": ["Alejandro Pérez", "Brandon Ortiz", "Edgar Muñoz", "Margarita Varela", "Martha Casas"]},
+            {"hora": "8:00 a 9:15", "salones": {"1": "Rodrigo Guerrero", "2": "Luis Carlos Gómez", "3": "Margarita Varela", "4": "Leonardo Delgadillo", "5": "No disponible", "6": "No disponible", "7": "No disponible", "8": "Hermes Almanza", "9": "Dilsa Sandoval", "10": "Edgar Muñoz", "11": "Johan Suárez", "12": "Nelson Amortegui", "13": "Jorge Sanabria", "14": "Fabio Vásquez", "15": "Olga Rodríguez", "16": "Jimmy Castro", "17": "Martha Casas", "18": "Carlos Molina", "19": "No disponible", "20": "Wilson Salazar"}, "libres": ["Alejandro Pérez", "Brandon Ortiz", "Carlos Alcalá", "Clara Cárdenas", "Janneth Mancipe", "Johana Ricaurte", "Sebastián Guayara"]},
+            {"hora": "9:15 a 9:45 (Descanso)", "salones": {"1": "(Descanso)", "2": "(Descanso)", "3": "(Descanso)", "4": "(Descanso)", "5": "(Descanso)", "6": "(Descanso)", "7": "(Descanso)", "8": "(Descanso)", "9": "(Descanso)", "10": "(Descanso)", "11": "(Descanso)", "12": "(Descanso)", "13": "(Descanso)", "14": "(Descanso)", "15": "(Descanso)", "16": "(Descanso)", "17": "(Descanso)", "18": "(Descanso)", "19": "(Descanso)", "20": "(Descanso)"}, "libres": []},
+            {"hora": "9:45 a 11:00", "salones": {"1": "Carlos Alcalá", "2": "Brandon Ortiz", "3": "Alejandro Pérez", "4": "Margarita Varela", "5": "No disponible", "6": "No disponible", "7": "No disponible", "8": "Rodrigo Guerrero", "9": "Janneth Mancipe", "10": "Clara Cárdenas", "11": "Hermes Almanza", "12": "Jimmy Castro", "13": "Jorge Sanabria", "14": "Dilsa Sandoval", "15": "Johana Ricaurte", "16": "Sebastián Guayara", "17": "Martha Casas", "18": "Edgar Muñoz", "19": "No disponible", "20": "Wilson Salazar"}, "libres": ["Fabio Vásquez", "Johan Suárez", "Leonardo Delgadillo", "Nelson Amortegui", "Olga Rodríguez"]},
+            {"hora": "11:00 a 12:00", "salones": {"1": "Rodrigo Guerrero", "2": "Brandon Ortiz", "3": "Alejandro Pérez", "4": "Leonardo Delgadillo", "5": "No disponible", "6": "No disponible", "7": "No disponible", "8": "Hermes Almanza", "9": "Janneth Mancipe", "10": "Clara Cárdenas", "11": "Johan Suárez", "12": "Nelson Amortegui", "13": "Jimmy Castro", "14": "Fabio Vásquez", "15": "Dilsa Sandoval", "16": "Sebastián Guayara", "17": "Martha Casas", "18": "Edgar Muñoz", "19": "No disponible", "20": "Margarita Varela"}, "libres": ["Carlos Alcalá", "Johana Ricaurte", "Jorge Sanabria", "Olga Rodríguez", "Wilson Salazar"]}
+        ];
+
+        const SALONES_HORARIO = [1,2,3,4,8,9,10,11,12,13,14,15,16,17,18,20];
+
+        function etiquetaTipo(r) {
+            if (r.tipo === 'direccion') return `Salón ${r.salon} — Dirección de curso ${r.curso}`;
+            if (r.tipo === 'coordinacion') return 'Coordinación — Organizar los paquetes de pruebas por grado y salón';
+            if (r.tipo === 'acompanamiento') return `Salón ${r.salon} — Acompañamiento de prueba`;
+            if (r.tipo === 'reemplazo') return 'Disponible para solicitudes de reemplazo breve';
+            if (r.tipo === 'sobrantes') return 'Ir de salón en salón recogiendo pruebas sobrantes';
+            if (r.tipo === 'sin_asignacion') return 'Sin asignación en este bloque';
+            if (r.tipo === 'descanso') return 'Descanso — patio (grupo de acompañamiento completo)';
+            return '';
+        }
+
+        function colorTipo(r) {
+            if (r.tipo === 'direccion') return 'border-azul-rey';
+            if (r.tipo === 'coordinacion') return 'border-purple-400';
+            if (r.tipo === 'acompanamiento') return 'border-green-500';
+            if (r.tipo === 'reemplazo') return 'border-amber-400';
+            if (r.tipo === 'sobrantes') return 'border-amber-400';
+            if (r.tipo === 'sin_asignacion') return 'border-red-400';
+            if (r.tipo === 'descanso') return 'border-amber-400';
+            return 'border-gray-200';
+        }
+
+        function bgTipo(r) {
+            // Verde transparente: tiene salón asignado. Naranja transparente: disponible/coordinación/descanso. Rojo transparente: no disponible.
+            if (r.tipo === 'direccion' || r.tipo === 'acompanamiento') return 'bg-green-500/15';
+            if (r.tipo === 'coordinacion' || r.tipo === 'reemplazo' || r.tipo === 'sobrantes' || r.tipo === 'descanso') return 'bg-amber-500/15';
+            if (r.tipo === 'sin_asignacion') return 'bg-red-500/15';
+            return 'bg-white';
+        }
+
+        function setVistaHorario(v) {
+            document.getElementById('vista-docente').classList.toggle('hidden', v !== 'docente');
+            document.getElementById('vista-aula').classList.toggle('hidden', v !== 'aula');
+            document.getElementById('vista-general').classList.toggle('hidden', v !== 'general');
+            const activo = "flex-1 py-2 rounded-lg font-bold text-[11px] uppercase bg-azul-rey text-white";
+            const inactivo = "flex-1 py-2 rounded-lg font-bold text-[11px] uppercase text-azul-rey";
+            document.getElementById('tab-doc').className = v === 'docente' ? activo : inactivo;
+            document.getElementById('tab-aula').className = v === 'aula' ? activo : inactivo;
+            document.getElementById('tab-general').className = v === 'general' ? activo : inactivo;
+            if (v === 'aula' && document.getElementById('select-aula-horario').options.length <= 1) poblarAulasHorario();
+            if (v === 'general') renderTablaGeneral();
+        }
+
+        function poblarAulasHorario() {
+            const sel = document.getElementById('select-aula-horario');
+            SALONES_HORARIO.forEach(a => {
+                let opt = document.createElement('option');
+                opt.value = a; opt.innerHTML = 'SALÓN ' + a;
+                sel.appendChild(opt);
+            });
+        }
+
+        function poblarDocentesHorario() {
+            const sel = document.getElementById('select-docente-horario');
+            const nombres = [...new Set(horarioPruebas.map(h => h.doc))].sort((a,b) => a.localeCompare(b));
+            nombres.forEach(n => {
+                let opt = document.createElement('option');
+                opt.value = n; opt.innerHTML = n;
+                sel.appendChild(opt);
+            });
+        }
+
+        function buscarHorarioDocente() {
+            const nombre = document.getElementById('select-docente-horario').value;
+            const cont = document.getElementById('resultado-docente');
+            cont.innerHTML = '';
+            if (!nombre) return;
+            const filtrado = horarioPruebas.filter(h => h.doc === nombre);
+            cont.innerHTML = `<div class="bg-azul-rey text-white p-3 rounded-xl font-bold text-center uppercase text-xs">${nombre}</div>`;
+            filtrado.forEach(r => {
+                cont.innerHTML += `
+                    <div class="${bgTipo(r)} p-4 rounded-xl shadow border-l-4 ${colorTipo(r)}">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase">${r.hora}</div>
+                        <div class="text-sm font-semibold text-gray-700">${etiquetaTipo(r)}</div>
+                    </div>`;
+            });
+        }
+
+        function filtrarHorarioPorAula() {
+            const aula = document.getElementById('select-aula-horario').value;
+            const cont = document.getElementById('resultado-aula');
+            cont.innerHTML = '';
+            if (!aula) return;
+            const filtrado = horarioPruebas.filter(h => h.salon === aula);
+            cont.innerHTML = `<div class="bg-azul-rey text-white p-3 rounded-xl font-bold text-center uppercase text-xs">SALÓN ${aula}</div>`;
+            filtrado.forEach(r => {
+                cont.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 ${colorTipo(r)}">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase">${r.hora}</div>
+                        <div class="text-sm font-semibold text-gray-700">${r.doc}</div>
+                        <div class="text-[10px] text-gray-400 uppercase">${etiquetaTipo(r)}</div>
+                    </div>`;
+            });
+        }
+
+        function renderTablaGeneral() {
+            const cont = document.getElementById('tarjetas-general');
+            if (cont.children.length > 0) return;
+            cont.innerHTML = '';
+            tablaGeneralPruebas.forEach(f => {
+                const esDescanso = f.hora.includes('Descanso');
+                let filas = '';
+                if (!esDescanso) {
+                    SALONES_HORARIO.forEach(a => {
+                        const v = f.salones[String(a)] || '—';
+                        if (v === 'No disponible' || v === '—') return;
+                        filas += `
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                                <span class="font-bold text-azul-rey">Salón ${a}</span>
+                                <span class="text-gray-800 text-right">${v}</span>
+                            </div>`;
+                    });
+                } else {
+                    filas = '<p class="text-gray-800 text-center font-semibold">Todo el grupo de acompañamiento en el patio.</p>';
+                }
+                let libresHtml = '';
+                if (f.libres.length > 0) {
+                    libresHtml = `
+                        <div class="mt-3 pt-3 border-t-2 border-dashed border-amber-300">
+                            <div class="font-bold text-amber-600 uppercase mb-1" style="font-size:14px">Libres / Coordinación</div>
+                            <div class="text-gray-800">${f.libres.join(' • ')}</div>
+                        </div>`;
+                }
+                cont.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                        <div class="bg-azul-rey p-3 text-white font-bold text-center uppercase tracking-widest" style="font-size:15px">${f.hora}</div>
+                        <div class="p-4">${filas || '<p class="text-gray-500 text-center">(Descanso general)</p>'}${libresHtml}</div>
+                    </div>`;
+            });
+        }
+
+        poblarAulasHorario();
+        poblarDocentesHorario();
+    </script>
+</body>
+</html>
